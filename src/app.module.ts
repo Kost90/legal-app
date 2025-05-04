@@ -7,6 +7,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 
 import typeorm from './config/typeorm.config';
 import UserModule from './modules/users/users.module';
+import AuthModule from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import UserModule from './modules/users/users.module';
       useFactory: async (configService: ConfigService) => configService.get('typeorm'),
     }),
     UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
