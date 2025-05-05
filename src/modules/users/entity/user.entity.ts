@@ -19,8 +19,8 @@ export class User extends BaseEntity {
   @Column({ select: false })
   passwordHash: string;
 
-  @Column({ nullable: true })
-  address: string;
+  // @Column({ nullable: true })
+  // address: string;
 
   @OneToMany(() => Document, (document) => document.user, {
     cascade: true,

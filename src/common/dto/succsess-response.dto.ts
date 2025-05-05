@@ -1,5 +1,5 @@
 export class SuccessResponseDTO<T> {
   statusCode: number;
-  timestamp: string;
+  message: string;
   data: T;
 }
