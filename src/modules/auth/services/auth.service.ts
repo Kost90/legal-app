@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -13,6 +13,7 @@ import { TokensDto } from '../dto/tokens.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger();
   constructor(
     private readonly userService: UserService,
     private configService: ConfigService,
@@ -36,6 +37,7 @@ export class AuthService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...createdUserWithouPass } = createdUser;
 
+    this.logger.log(`User with ${createdUser.email} registered successfully`);
     return { data: createdUserWithouPass, statusCode: HttpStatus.OK, message: 'User registered successfully' };
   }
 
