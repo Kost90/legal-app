@@ -7,6 +7,7 @@ import { PassportModule } from '@nestjs/passport';
 import { User } from '../users/entity/user.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './services/auth.service';
+import UserModule from '../users/users.module';
 
 @Module({
   controllers: [AuthController],
@@ -20,6 +21,7 @@ import { AuthService } from './services/auth.service';
         secret: configService.get('JWT_SECRET'),
       }),
     }),
+    UserModule,
   ],
   exports: [AuthService],
   providers: [AuthService],

@@ -17,7 +17,13 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "typeorm": "npm run build && npx typeorm -d dist/db/ormconfig.js",
+    "migration:run": "npm run typeorm migration:run -- -d ./src/config/typeorm.config.ts",
+    "migration:generate": "cross-env NAME=$npm_config_name npm run typeorm -- -d ./src/config/typeorm.config.ts migration:generate ./migrations/%npm_config_name%",
+    "migration:create": "npm run typeorm -- migration:create ./migrations/${npm_config_name:-migration}",
+    "migration:revert": "npm run typeorm -- -d ./src/config/typeorm.config.ts migration:revert",
+    "migration:eslint:fix": "eslint --fix ./migrations/*.ts"
   },
   "dependencies": {
     "@fastify/multipart": "^9.0.3",
@@ -36,6 +42,7 @@
     "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "cross-env": "^7.0.3",
     "fastify": "^5.3.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
