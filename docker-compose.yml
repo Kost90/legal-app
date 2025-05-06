@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  backend-a:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: legalApp-backend-a
+    env_file:
+      - .env
+    environment:
+      - PORT=3030
+    ports:
+      - "3130:3030"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - legalApp_network
+    logging:
+      driver: json-file
+
+  backend-b:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: legalApp-backend-b
+    env_file:
+      - .env
+    environment:
+      - PORT=3030
+    ports:
+      - "3131:3030"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - legalApp_network
+    logging:
+      driver: json-file
+
+  postgres:
+    container_name: legalApp-postgres
+    image: postgres
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - '5431:5432'
+    networks:
+      - legalApp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      retries: 5
+      timeout: 3s
+
+  backup:
+    build:
+      context: ./pg-backup-to-s3
+    container_name: legalApp-backup
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      # S3_BUCKET: ${DO_SPACES_BUCKET}
+      # AWS_ACCESS_KEY_ID: ${DO_SPACES_KEY}
+      # AWS_SECRET_ACCESS_KEY: ${DO_SPACES_SECRET}
+      # DO_SPACES_PUBLIC_URL: ${DO_SPACES_PUBLIC_URL}
+    networks:
+      - legalApp_network
+    logging:
+      driver: json-file
+
+
+volumes:
+  pg_data:
+
+networks:
+  legalApp_network:

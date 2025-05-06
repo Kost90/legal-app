@@ -11,7 +11,7 @@ const config = {
   username: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DB,
-  entities: ['dist/**/*.entities{.ts,.js}'],
+  entities: ['dist/**/*.entity{.ts,.js}'],
   migrations: ['dist/migrations/*{.ts,.js}'],
   autoLoadEntities: true,
   // TODO: only for dev, for prod change synchronize to false

@@ -8,7 +8,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, SuccessRespons
     return next.handle().pipe(
       map((data) => ({
         statusCode: 200,
-        timestamp: new Date().toISOString(),
+        message: '',
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         data,
       })),
