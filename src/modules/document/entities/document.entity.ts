@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from 'src/common/entities/base.entity';
-import { DocumentType } from 'src/modules/documentsTypes/entities/document-type.entity';
-import { User } from 'src/modules/users/entities/user.entity';
+import { DocumentType } from 'src/modules/documentType/entities/document-type.entity';
+import { User } from 'src/modules/user/entities/user.entity';
 
 @Entity()
 export class Document extends BaseEntity {

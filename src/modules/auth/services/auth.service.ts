@@ -5,9 +5,9 @@ import { JwtService } from '@nestjs/jwt';
 
 import { SuccessResponseDTO } from 'src/common/dto/succsess-response.dto';
 import { AlreadyExistsException } from 'src/common/exceptions/common.exception';
-import { CreateUserDto } from 'src/modules/users/dto/create-user.dto';
-import { User } from 'src/modules/users/entities/user.entity';
-import { UserService } from 'src/modules/users/services/user.service';
+import { CreateUserDto } from 'src/modules/user/dto/create-user.dto';
+import { User } from 'src/modules/user/entities/user.entity';
+import { UserService } from 'src/modules/user/services/user.service';
 import { SignInDto } from '../dto/sign-in.dto';
 import { TokensDto } from '../dto/tokens.dto';
 
