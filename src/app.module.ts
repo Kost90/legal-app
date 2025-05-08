@@ -5,16 +5,18 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 
+import configuration from './config/configuration';
 import typeorm from './config/typeorm.config';
-import UserModule from './modules/users/users.module';
+import UserModule from './modules/user/users.module';
 import AuthModule from './modules/auth/auth.module';
+import StorageModule from './modules/storage/storage.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
-      load: [typeorm],
+      load: [typeorm, configuration],
     }),
     ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
@@ -23,6 +25,7 @@ import AuthModule from './modules/auth/auth.module';
     }),
     UserModule,
     AuthModule,
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [AppService],
