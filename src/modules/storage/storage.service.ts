@@ -29,6 +29,7 @@ export class StorageService {
       });
       await this.s3.send(command);
       this.logger.log(`Documents ${key} uploaded to storage succsessfully`);
+      return true;
     } catch (error) {
       this.logger.error('File upload failed:', error);
       throw new InternalServerErrorException('Failed to upload file');
