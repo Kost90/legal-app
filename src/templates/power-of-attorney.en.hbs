@@ -1,0 +1,114 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <title>Power of Attorney</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+        padding: 40px;
+        color: #000;
+      }
+      h1 {
+        text-align: center;
+        text-transform: uppercase;
+        margin-bottom: 30px;
+      }
+      .section {
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>POWER OF ATTORNEY</h1>
+
+    <div class='section'>
+      {{city}},
+      {{date}}, two thousand and twenty-five
+    </div>
+
+    <div class='section'>
+      I,
+      {{fullName}}, born on
+      {{birthDate}}, Taxpayer Identification Number
+      {{tin}}, registered at the address:
+      {{address}}, Passport
+      {{passport}}, issued on
+      {{passportIssueDate}}; understanding the meaning of my actions and acting voluntarily, on the basis of a prior
+      mutual agreement, hereby I authorize
+      {{representativeName}}, born on
+      {{representativeBirthDate}}, Taxpayer Identification Number
+      {{representativeTIN}}, registered at the address:
+      {{representativeAddress}},
+    </div>
+
+    <div class='section'>
+      TO BE MY REPRESENTATIVE AND REPRESENT MY INTEREST before third parties in all relevant enterprises, institutions
+      and organizations, regardless of their subordination, including state authorities, management and local
+      self-government bodies, district administration, its departments, privatization bodies of Lviv City Council, in
+      the city agency for housing privatization, Municipal Enterprise “City Agency for Housing Privatization”, Municipal
+      Services Department of Lviv City Council, executive bodies of Lviv City Council, in notary offices, Municipal
+      Enterprise “PRAVO”, Municipal Enterprise “Bureau of Technical Inventory” of Lviv City Council, State Registration
+      Service of Ukraine (Ukrderzhregistr) and its structural subdivisions, Department of State Registration of Real
+      Rights to Immovable Property of Lviv City Department of Justice, in associations of housing and communal services,
+      Inspectorate of Architectural and Building Control in Lviv Region and its structural subdivisions, departments of
+      architecture and construction, fire safety authorities, sanitary-epidemiological station, address bureau,
+      Administrative Service Centers, expert appraisal organizations, with all the necessary powers in resolving any
+      issues related to the privatization and registration of ownership in my name of the apartment located at the
+      address:
+      {{propertyAddress}}, receiving necessary documents, duplicate of documents, as well as with further DISPOSAL
+      (sale, exchange, rent) of the above-mentioned property, on terms and at a price at her own discretion, with the
+      right to conclude and sign on my behalf on terms at her own discretion purchase and sale agreement, rental
+      agreement, exchange agreement, preliminary agreement, agreement on amendments and/or additions to the above
+      agreements, agreements on termination of the above agreements, etc.
+    </div>
+
+    <div class='section'>
+      For this purpose, I do hereby authorize her to submit and receive on my behalf the necessary certificates,
+      documents, statements, technical documents, reports, extracts, copies, etc., permits, registration and title
+      documents, incl. documents on ownership of real estate, certificates, Extract / Information from the State
+      Register of Real Rights to Immovable Property on the registration of ownership; to submit statements on my behalf
+      to relevant authorities and institutions, including statements for the issuance of duplicate documents, statements
+      for state registration of rights and their encumbrances, statements for my marital status and/or ownership of
+      property by personal private property right, statements for error correction; to receive the necessary
+      certificates and documents, including title documents, duplicates of title documents, any documents, including
+      Certificate of ownership of real estate (or its duplicate), Information certificates and/or Extracts from the
+      State Register of Real Rights to Immovable Property; to sign for me on documents and their receipt, conclude and
+      sign on my behalf preliminary agreements, purchase and sale agreements, agreement on amendments and/or additions
+      to the above agreements, rental agreements, agreements on termination of the above agreements, etc.; to open and
+      close accounts in my name in any banking institutions, carry out non-cash settlements, receive funds due to me,
+      pay the cost of services for processing documents, administrative fees, state duty, taxes and other necessary
+      payments, as well as perform all other actions related to this Power of Attorney.
+    </div>
+
+    <div class='section'>
+      The Power of Attorney is issued with the right of substitution for a period of THREE YEARS and is valid until
+      {{validUntil}}.
+    </div>
+
+    <div class='section'>
+      Signature: ____________________
+      {{fullName}}
+    </div>
+  </body>
+</html>
+
+{{! {
+  city: 'Lviv',
+  date: 'May 8',
+  fullName: 'Oleksandr Shved',
+  birthDate: 'January 23, 1975',
+  tin: '2741621456',
+  address: 'Lviv city, 4 Patona Street, apartment 30',
+  passport: 'PU428225',
+  passportIssueDate: 'January 21, 2020',
+
+  representativeName: 'Tamara Shved',
+  representativeBirthDate: 'September 20, 1954',
+  representativeTIN: '1998612501',
+  representativeAddress: 'Lviv city, 4 Patona Street, apartment 30',
+
+  propertyAddress: 'Lviv city, 4 Patona Street, apartment 30',
+  validUntil: 'May 8, 2028'
+} }}

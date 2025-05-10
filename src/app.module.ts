@@ -10,6 +10,9 @@ import typeorm from './config/typeorm.config';
 import UserModule from './modules/user/users.module';
 import AuthModule from './modules/auth/auth.module';
 import StorageModule from './modules/storage/storage.module';
+import TemplateModule from './modules/template/template.module';
+import PdfModule from './modules/pdf/pdf.module';
+import DocumentModule from './modules/document/documents.module';
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import StorageModule from './modules/storage/storage.module';
     UserModule,
     AuthModule,
     StorageModule,
+    DocumentModule,
+    PdfModule,
+    TemplateModule,
   ],
   controllers: [AppController],
   providers: [AppService],
