@@ -1,21 +1,22 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from 'src/common/entities/base.entity';
-import { DocumentType } from 'src/modules/documentsTypes/entities/document-type.entity';
-import { User } from 'src/modules/users/entities/user.entity';
+import { DocumentType } from 'src/modules/documentType/entities/document-type.entity';
+import { User } from 'src/modules/user/entities/user.entity';
 
 @Entity()
 export class Document extends BaseEntity {
   @Column({ nullable: false })
-  fileUrl: string;
+  fileKey: string;
 
-  @Column()
+  @Column({ default: false })
   isPaid: boolean;
 
-  @Column()
+  @Column({ nullable: true })
   expiredAt: string;
 
   @ManyToOne(() => User, (user) => user.documents, {
     onDelete: 'CASCADE',
+    nullable: true,
   })
   @JoinColumn({ name: 'userId' })
   user: User;

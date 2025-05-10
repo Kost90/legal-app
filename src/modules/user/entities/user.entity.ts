@@ -1,6 +1,6 @@
 import { Entity, Column, OneToMany } from 'typeorm';
 import { BaseEntity } from 'src/common/entities/base.entity';
-import { Document } from 'src/modules/documents/entities/document.entity';
+import { Document } from 'src/modules/document/entities/document.entity';
 
 @Entity()
 export class User extends BaseEntity {

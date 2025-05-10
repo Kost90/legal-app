@@ -1,12 +1,32 @@
-FROM node:20-alpine AS development
+# FROM node:20-alpine AS development
 
+# WORKDIR /app
+
+# COPY package*.json ./
+# RUN npm install
+
+# COPY . .
+
+# EXPOSE 3030
+
+# CMD ["sh", "-c", "npm run migration:run && npm run start:dev"]
+FROM ghcr.io/puppeteer/puppeteer:latest
+
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
+# Копируем файлы зависимостей
 COPY package*.json ./
-RUN npm install
 
+# Устанавливаем зависимости от root (важно для прав записи)
+USER root
+RUN chown -R pptruser:pptruser /app && npm install
+
+# Возвращаемся к безопасному пользователю Puppeteer
+USER root
+
+# Копируем остальной код
 COPY . .
 
-EXPOSE 3030
-
+# Запуск миграций и приложения
 CMD ["sh", "-c", "npm run migration:run && npm run start:dev"]

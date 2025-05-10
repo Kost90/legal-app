@@ -36,9 +36,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const responseBody = {
       statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request?.url,
-      message: flatten(errorMessages),
+      message: flatten(errorMessages).join('; '),
       data: null,
     };
 
@@ -46,12 +44,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
   }
 
   private parseMessages(data: any): string[] {
-    if (typeof data === 'string') return [data];
-    if (Array.isArray(data)) return data;
-    if (typeof data?.getMessages === 'function') return data.getMessages();
-    if (typeof data?.getMessage === 'function') return [data.getMessage()];
-    if (typeof data?.message === 'string') return [data.message];
-    return [data?.toString() || 'Unexpected error'];
+    return typeof data.getMessages === 'function'
+      ? (data.getMessages() as string[])
+      : typeof data.getMessage === 'function'
+        ? [data.getMessage()]
+        : data.message
+          ? [data.message]
+          : [data.toString()];
   }
 
   private getStatusCode(exception: any): number {
