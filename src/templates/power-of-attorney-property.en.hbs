@@ -1,0 +1,84 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <title>Power of Attorney</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+        padding: 40px;
+        color: #000;
+      }
+      h1 {
+        text-align: center;
+        text-transform: uppercase;
+        margin-bottom: 30px;
+      }
+      .section {
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>POWER OF ATTORNEY</h1>
+
+    <div class='section'>
+      {{city}},
+      {{date}}, 2025
+    </div>
+
+    <div class='section'>
+      I,
+      {{fullName}}, born on
+      {{birthDate}}, Tax Identification Number:
+      {{tin}}, residing at
+      {{address}}, passport:
+      {{passport}}, issued on
+      {{passportIssueDate}}, being fully aware of the meaning of my actions and acting voluntarily, based on a prior
+      agreement, hereby authorize
+      {{representativeName}}, born on
+      {{representativeBirthDate}}, Tax Identification Number:
+      {{representativeTIN}}, residing at
+      {{representativeAddress}},
+    </div>
+
+    <div class='section'>
+      TO BE MY REPRESENTATIVE AND ACT ON MY BEHALF before third parties in all relevant enterprises, institutions, and
+      organizations, regardless of their jurisdiction, in particular in
+      {{authoritiesList}}
+      — with all necessary powers to resolve matters related to the privatization and registration of ownership rights
+      to the apartment located at:
+      {{propertyAddress}}, to obtain the necessary documents and their duplicates, and to further DISPOSE of the
+      aforementioned property (sale, exchange, lease) on terms and at a price at her discretion, with the right to enter
+      into and sign on my behalf sales agreements, lease agreements, preliminary agreements, agreements for amendments
+      and/or supplements to the aforementioned agreements, termination agreements, and so on.
+    </div>
+
+    <div class='section'>
+      For this purpose, I authorize her to submit and receive on my behalf all necessary certificates, documents,
+      applications, technical documentation, reports, extracts, copies, permits, registration and ownership documents,
+      including ownership certificates for real estate, extracts/information from the State Register of Property Rights
+      to Real Estate regarding the registration of ownership rights; to submit applications on my behalf to the relevant
+      authorities and institutions, including applications for issuance of duplicate documents, registration of property
+      rights and encumbrances, statements about marital status and/or personal ownership rights, error corrections; to
+      receive any necessary documents, including ownership documents and their duplicates, ownership certificates (or
+      their duplicates), information certificates and/or extracts from the State Register of Property Rights to Real
+      Estate; to sign documents and receive them on my behalf, to enter into and sign preliminary agreements, sales
+      contracts, agreements on amendments and/or supplements to said contracts, lease agreements, termination
+      agreements, etc.; to open and close accounts on my behalf in any banking institutions, to make non-cash
+      settlements, receive funds due to me, pay document processing fees, administrative fees, state duties, taxes, and
+      other necessary payments, and to perform all other actions related to this Power of Attorney.
+    </div>
+
+    <div class='section'>
+      This Power of Attorney is issued with the right of substitution and is valid for THREE YEARS, until
+      {{validUntil}}.
+    </div>
+
+    <div class='section'>
+      Signature: ____________________
+      {{fullName}}
+    </div>
+  </body>
+</html>

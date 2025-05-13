@@ -20,9 +20,12 @@ export class DocumentService {
     private readonly documentTypeRepository: Repository<DocumentType>,
   ) {}
 
-  public async createPowerOfAttorneyDocument(body: CreatePowerOfAttorneyDto, userId?: string): Promise<StreamableFile> {
+  public async createPowerOfAttorneyPropertyDocument(
+    body: CreatePowerOfAttorneyDto,
+    userId?: string,
+  ): Promise<StreamableFile> {
     const templateName = `${body.documentType}.${body.documentLang}`;
-    const pdf = await this.pdfService.generatePdf(templateName, body.details);
+    const pdf = await this.pdfService.generatePwoerOfAttorneyPropertyPdf(templateName, body.details, body.documentLang);
 
     if (!pdf) {
       this.logger.error(`Can't create pdf ${templateName}`);

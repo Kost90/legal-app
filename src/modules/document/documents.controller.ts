@@ -6,11 +6,11 @@ import { CreatePowerOfAttorneyDto } from './dto/create-power-of-attorney.dto';
 export class DocumentsController {
   constructor(private readonly documentService: DocumentService) {}
 
-  @Post('create-power-of-attorney')
+  @Post('create-power-of-attorney-property')
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'inline; filename=generatedPowerOfAttorney.pdf')
   @Header('Content-Security-Policy', 'frame-ancestors *')
-  async createPowerOfAttorney(@Body() body: CreatePowerOfAttorneyDto) {
-    return this.documentService.createPowerOfAttorneyDocument(body);
+  async createPowerOfAttorneyProperty(@Body() body: CreatePowerOfAttorneyDto) {
+    return this.documentService.createPowerOfAttorneyPropertyDocument(body);
   }
 }
