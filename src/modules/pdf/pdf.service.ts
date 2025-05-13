@@ -3,30 +3,40 @@ import { Injectable } from '@nestjs/common';
 import { PDFDocument } from 'pdf-lib';
 
 import { TemplateService } from '../template/template.service';
+import { PowerOfAttorneyDetailsDto } from '../document/dto/create-power-of-attorney.dto';
 
 @Injectable()
 export class PdfService {
   constructor(private readonly templateService: TemplateService) {}
 
-  async generatePdf(templateName: string, data: Record<string, any>): Promise<Buffer> {
-    const html = this.templateService.renderTemplate(templateName, data);
+  async generatePwoerOfAttorneyPropertyPdf(
+    templateName: string,
+    data: PowerOfAttorneyDetailsDto,
+    documentLang: string,
+  ): Promise<Buffer> {
+    const [html, browser] = await Promise.all([
+      this.templateService.renderPropertyPowerAttorneyTemplate(templateName, data, documentLang),
+      puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      }),
+    ]);
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
+    try {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
 
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    const buffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
-    });
+      // TODO: Make pdf options in config
+      const buffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
+      });
 
-    const compressedPdf = await this.compressPdf(Buffer.from(buffer));
-
-    return compressedPdf;
+      return await this.compressPdf(Buffer.from(buffer));
+    } finally {
+      await browser.close();
+    }
   }
 
   private async compressPdf(buffer: Buffer): Promise<Buffer> {

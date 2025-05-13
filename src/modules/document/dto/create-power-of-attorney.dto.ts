@@ -1,7 +1,26 @@
-import { IsNotEmpty, IsString, IsEnum, ValidateNested } from 'class-validator';
+import { IsNotEmpty, IsString, IsEnum, ValidateNested, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
 import { DOCUMENT_LANG, DOCUMENT_TYPE } from 'src/common/constants/documents-type.enum';
+
+export class PropertyAddres {
+  @IsString()
+  city: string;
+
+  @IsString()
+  street: string;
+
+  @IsString()
+  buildNumber: string;
+
+  @IsOptional()
+  @IsString()
+  apartment?: string;
+
+  @IsOptional()
+  @IsString()
+  postCode: string;
+}
 
 export class PowerOfAttorneyDetailsDto {
   @IsNotEmpty()
@@ -45,8 +64,8 @@ export class PowerOfAttorneyDetailsDto {
   representativeAddress: string;
 
   @IsNotEmpty()
-  @IsString()
-  propertyAddress: string;
+  @Type(() => PropertyAddres)
+  propertyAddress: PropertyAddres;
 
   @IsNotEmpty()
   @IsString()
