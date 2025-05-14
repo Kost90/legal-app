@@ -1,32 +1,41 @@
-import * as puppeteer from 'puppeteer';
 import { Injectable } from '@nestjs/common';
 import { PDFDocument } from 'pdf-lib';
 
 import { TemplateService } from '../template/template.service';
+import { PowerOfAttorneyDetailsDto } from '../document/dto/create-power-of-attorney.dto';
+import { ConfigService } from '@nestjs/config';
+import { DOCUMENT_LANG } from 'src/common/constants/documents-type.enum';
+import { PuppeteerService } from '../puppeteer/puppeteer.service';
 
 @Injectable()
 export class PdfService {
-  constructor(private readonly templateService: TemplateService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly templateService: TemplateService,
+    private readonly puppeteerService: PuppeteerService,
+  ) {}
 
-  async generatePdf(templateName: string, data: Record<string, any>): Promise<Buffer> {
-    const html = this.templateService.renderTemplate(templateName, data);
+  async generatePwoerOfAttorneyPropertyPdf(
+    templateName: string,
+    data: PowerOfAttorneyDetailsDto,
+    documentLang: DOCUMENT_LANG,
+  ): Promise<Buffer> {
+    const html = await this.templateService.renderPropertyPowerAttorneyTemplate(templateName, data, documentLang);
+    const page = await this.puppeteerService.getNewPage();
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
+    try {
+      await page.setContent(html, { waitUntil: 'networkidle0' });
 
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    const buffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
-    });
+      const buffer = await page.pdf({
+        format: this.configService.get('format'),
+        printBackground: this.configService.get('printBackground'),
+        margin: this.configService.get('margin'),
+      });
 
-    const compressedPdf = await this.compressPdf(Buffer.from(buffer));
-
-    return compressedPdf;
+      return await this.compressPdf(Buffer.from(buffer));
+    } finally {
+      await page.close();
+    }
   }
 
   private async compressPdf(buffer: Buffer): Promise<Buffer> {

@@ -13,6 +13,7 @@ import StorageModule from './modules/storage/storage.module';
 import TemplateModule from './modules/template/template.module';
 import PdfModule from './modules/pdf/pdf.module';
 import DocumentModule from './modules/document/documents.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import DocumentModule from './modules/document/documents.module';
     DocumentModule,
     PdfModule,
     TemplateModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

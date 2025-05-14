@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger, NotFoundException, StreamableFile } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Document } from '../entities/document.entity';
 import { Repository } from 'typeorm';
@@ -20,16 +21,19 @@ export class DocumentService {
     private readonly documentTypeRepository: Repository<DocumentType>,
   ) {}
 
-  public async createPowerOfAttorneyDocument(body: CreatePowerOfAttorneyDto, userId?: string): Promise<StreamableFile> {
+  public async createPowerOfAttorneyPropertyDocument(
+    body: CreatePowerOfAttorneyDto,
+    userId?: string,
+  ): Promise<StreamableFile> {
     const templateName = `${body.documentType}.${body.documentLang}`;
-    const pdf = await this.pdfService.generatePdf(templateName, body.details);
+    const pdf = await this.pdfService.generatePwoerOfAttorneyPropertyPdf(templateName, body.details, body.documentLang);
 
     if (!pdf) {
-      this.logger.error(`Can't create pdf ${templateName}`);
+      this.logger.error(`Failed to create pdf ${templateName}`);
       throw new BadRequestException(`Failed to create pdf.`);
     }
 
-    const fileKey = `${templateName}.${body.details.fullName}.${body.details.tin}`.trim();
+    const fileKey = `${templateName}.${body.details.fullName}.${uuidv4()}`.trim();
 
     const storedFile = await this.storageService.uploadFile(fileKey, pdf, 'application/pdf');
 
@@ -58,6 +62,7 @@ export class DocumentService {
       throw new BadRequestException(`Failed to save document.`);
     }
 
+    this.logger.log(`Document ${fileKey} created succsessfully`);
     return new StreamableFile(pdf);
   }
 }

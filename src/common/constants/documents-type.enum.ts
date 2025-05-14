@@ -1,9 +1,8 @@
 export enum DOCUMENT_TYPE {
-  PAWER_OF_ATTORNEY = 'power-of-attorney',
+  PAWER_OF_ATTORNEY = 'power-of-attorney-property',
 }
 
 export enum DOCUMENT_LANG {
   EN = 'en',
   UA = 'ua',
-  RU = 'ru',
 }

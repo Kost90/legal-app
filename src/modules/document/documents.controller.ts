@@ -1,16 +1,20 @@
-import { Body, Controller, Header, Post } from '@nestjs/common';
+import { Body, Controller, Header, Post, UseGuards } from '@nestjs/common';
+
 import { DocumentService } from './services/document.service';
 import { CreatePowerOfAttorneyDto } from './dto/create-power-of-attorney.dto';
+import { CONTROLLERS } from 'src/common/constants/controllers.enum';
+import { ApiKeyAuthGuard } from 'src/common/guards/api-key.guard';
 
-@Controller('documents')
+@UseGuards(ApiKeyAuthGuard)
+@Controller(CONTROLLERS.DOCUMENTS)
 export class DocumentsController {
   constructor(private readonly documentService: DocumentService) {}
 
-  @Post('create-power-of-attorney')
+  @Post('create-power-of-attorney-property')
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'inline; filename=generatedPowerOfAttorney.pdf')
   @Header('Content-Security-Policy', 'frame-ancestors *')
-  async createPowerOfAttorney(@Body() body: CreatePowerOfAttorneyDto) {
-    return this.documentService.createPowerOfAttorneyDocument(body);
+  async createPowerOfAttorneyProperty(@Body() body: CreatePowerOfAttorneyDto) {
+    return this.documentService.createPowerOfAttorneyPropertyDocument(body);
   }
 }
