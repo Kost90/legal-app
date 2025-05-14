@@ -8,67 +8,86 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { AuthorityList } from './entity/authorityList.entity';
 import { Repository } from 'typeorm';
 import { PowerOfAttorneyDetailsDto } from '../document/dto/create-power-of-attorney.dto';
-import { DOCUMENT_TYPE } from 'src/common/constants/documents-type.enum';
+import { DOCUMENT_LANG, DOCUMENT_TYPE } from 'src/common/constants/documents-type.enum';
 import { cityMap } from './utils/cityMapper';
 import { CITIES } from 'src/common/constants/city.enum';
+import { FormatToString } from 'src/common/utilities/formatToString.utility';
+import { IPowerOfAttorneyPropert } from './types';
+import { AiService } from '../ai/ai.service';
 
 @Injectable()
 export class TemplateService {
   private readonly logger = new Logger(TemplateService.name);
+
   constructor(
     private readonly configService: ConfigService,
     @InjectRepository(AuthorityList)
-    private readonly authorityList: Repository<AuthorityList>,
+    private readonly authorityListRepo: Repository<AuthorityList>,
+    private readonly aiService: AiService,
   ) {}
+
   public async renderPropertyPowerAttorneyTemplate(
     templateName: string,
     data: PowerOfAttorneyDetailsDto,
-    documentLang: string,
+    documentLang: DOCUMENT_LANG,
   ): Promise<string> {
-    const templateDir = this.configService.get<string>('templateDir');
-    const filePath = path.join(process.cwd(), templateDir, `${templateName}.hbs`);
-
-    if (!fs.existsSync(filePath)) {
-      this.logger.error(`Failed to render template ${templateName}`);
-      throw new NotFoundException(`Template not found at path: ${filePath}`);
-    }
-
+    const templateStr = this.loadTemplate(templateName);
     const city = this.normalizeCityName(data.propertyAddress.city);
+    const propertyAddress = FormatToString(data.propertyAddress);
 
-    const authorityListForPowerOfAttorney = await this.authorityList.findOne({
-      where: { document: DOCUMENT_TYPE.PAWER_OF_ATTORNEY, city: city },
-    });
+    const normalizedCity = city ? city : data.propertyAddress.city;
+    const authorityList = await this.findOrGenerateAuthorityList(normalizedCity, documentLang);
 
-    if (!authorityListForPowerOfAttorney) {
-      this.logger.warn(`Authoriti list not found for ${city} in db`);
-      // TODO: Make here request to AI
-    }
-
-    // TODO: Make utils for adding appartment or diff lang befor number of appartment and make this all in utils
-    const propertyAddress = `${data.propertyAddress.city}, ${data.propertyAddress.street}, ${data.propertyAddress.buildNumber}, ${data.propertyAddress.apartment ? data.propertyAddress.apartment : null}`;
-
-    const updatedData = {
+    const updatedData: IPowerOfAttorneyPropert = {
       ...data,
       propertyAddress,
-      authoritiesList:
-        documentLang === 'ua'
-          ? authorityListForPowerOfAttorney.authoritiesUk
-          : authorityListForPowerOfAttorney.authoritiesEn,
+      authoritiesList: authorityList,
     };
-
-    const templateStr = fs.readFileSync(filePath, 'utf8');
-
-    if (!templateStr) {
-      this.logger.error(`Failed to create document. Template string, by path:${filePath} not found`);
-      throw new BadRequestException('Failed to create document.');
-    }
 
     const template = Handlebars.compile(templateStr);
     return template(updatedData);
   }
 
-  private normalizeCityName(input: string): CITIES | string {
-    const key = input.trim().toLowerCase();
-    return cityMap[key] || 'not found';
+  private loadTemplate(templateName: string): string {
+    const templateDir = this.configService.get<string>('templateDir');
+    const filePath = path.join(process.cwd(), templateDir, `${templateName}.hbs`);
+
+    if (!fs.existsSync(filePath)) {
+      this.logger.error(`Template not found: ${filePath}`);
+      throw new NotFoundException(`Template not found at path: ${filePath}`);
+    }
+
+    const content = fs.readFileSync(filePath, 'utf8');
+    if (!content) {
+      this.logger.error(`Template content is empty: ${filePath}`);
+      throw new BadRequestException('Template file is empty.');
+    }
+
+    return content;
+  }
+
+  private async findOrGenerateAuthorityList(city: string, lang: DOCUMENT_LANG): Promise<string> {
+    if (city) {
+      const authority = await this.authorityListRepo.findOne({
+        where: { document: DOCUMENT_TYPE.PAWER_OF_ATTORNEY, city },
+      });
+
+      if (authority) {
+        this.logger.log(`Authoriti list succsessfully founded in db`);
+        return lang === DOCUMENT_LANG.UA ? authority.authoritiesUk : authority.authoritiesEn;
+      }
+      this.logger.warn(`Authority list not found in DB for city: ${city}. Generating via AI...`);
+    }
+
+    return await this.aiService.getAuthorityByCityForProperty(city, lang);
+  }
+
+  private normalizeCityName(input: string): CITIES {
+    const normalized = cityMap[input.trim().toLowerCase()];
+    if (!normalized) {
+      this.logger.warn(`City normalization failed for input: ${input}`);
+      return null;
+    }
+    return normalized;
   }
 }

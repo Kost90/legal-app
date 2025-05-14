@@ -5,5 +5,4 @@ export enum DOCUMENT_TYPE {
 export enum DOCUMENT_LANG {
   EN = 'en',
   UA = 'ua',
-  RU = 'ru',
 }

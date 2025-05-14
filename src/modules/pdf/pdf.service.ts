@@ -4,15 +4,20 @@ import { PDFDocument } from 'pdf-lib';
 
 import { TemplateService } from '../template/template.service';
 import { PowerOfAttorneyDetailsDto } from '../document/dto/create-power-of-attorney.dto';
+import { ConfigService } from '@nestjs/config';
+import { DOCUMENT_LANG } from 'src/common/constants/documents-type.enum';
 
 @Injectable()
 export class PdfService {
-  constructor(private readonly templateService: TemplateService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly templateService: TemplateService,
+  ) {}
 
   async generatePwoerOfAttorneyPropertyPdf(
     templateName: string,
     data: PowerOfAttorneyDetailsDto,
-    documentLang: string,
+    documentLang: DOCUMENT_LANG,
   ): Promise<Buffer> {
     const [html, browser] = await Promise.all([
       this.templateService.renderPropertyPowerAttorneyTemplate(templateName, data, documentLang),
@@ -26,11 +31,10 @@ export class PdfService {
       const page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'networkidle0' });
 
-      // TODO: Make pdf options in config
       const buffer = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
+        format: this.configService.get('format'),
+        printBackground: this.configService.get('printBackground'),
+        margin: this.configService.get('margin'),
       });
 
       return await this.compressPdf(Buffer.from(buffer));

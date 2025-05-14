@@ -19,7 +19,7 @@ export class PropertyAddres {
 
   @IsOptional()
   @IsString()
-  postCode: string;
+  postCode?: string;
 }
 
 export class PowerOfAttorneyDetailsDto {
@@ -87,7 +87,7 @@ export class CreatePowerOfAttorneyDto {
 
   @IsEnum(DOCUMENT_LANG)
   @IsNotEmpty()
-  documentLang: string;
+  documentLang: DOCUMENT_LANG;
 
   @ValidateNested()
   @Type(() => PowerOfAttorneyDetailsDto)
