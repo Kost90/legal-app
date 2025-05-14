@@ -1,4 +1,3 @@
-import * as puppeteer from 'puppeteer';
 import { Injectable } from '@nestjs/common';
 import { PDFDocument } from 'pdf-lib';
 
@@ -6,12 +5,14 @@ import { TemplateService } from '../template/template.service';
 import { PowerOfAttorneyDetailsDto } from '../document/dto/create-power-of-attorney.dto';
 import { ConfigService } from '@nestjs/config';
 import { DOCUMENT_LANG } from 'src/common/constants/documents-type.enum';
+import { PuppeteerService } from '../puppeteer/puppeteer.service';
 
 @Injectable()
 export class PdfService {
   constructor(
     private readonly configService: ConfigService,
     private readonly templateService: TemplateService,
+    private readonly puppeteerService: PuppeteerService,
   ) {}
 
   async generatePwoerOfAttorneyPropertyPdf(
@@ -19,16 +20,10 @@ export class PdfService {
     data: PowerOfAttorneyDetailsDto,
     documentLang: DOCUMENT_LANG,
   ): Promise<Buffer> {
-    const [html, browser] = await Promise.all([
-      this.templateService.renderPropertyPowerAttorneyTemplate(templateName, data, documentLang),
-      puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      }),
-    ]);
+    const html = await this.templateService.renderPropertyPowerAttorneyTemplate(templateName, data, documentLang);
+    const page = await this.puppeteerService.getNewPage();
 
     try {
-      const page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'networkidle0' });
 
       const buffer = await page.pdf({
@@ -39,7 +34,7 @@ export class PdfService {
 
       return await this.compressPdf(Buffer.from(buffer));
     } finally {
-      await browser.close();
+      await page.close();
     }
   }
 
