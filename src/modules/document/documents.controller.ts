@@ -1,8 +1,12 @@
-import { Body, Controller, Header, Post } from '@nestjs/common';
+import { Body, Controller, Header, Post, UseGuards } from '@nestjs/common';
+
 import { DocumentService } from './services/document.service';
 import { CreatePowerOfAttorneyDto } from './dto/create-power-of-attorney.dto';
+import { CONTROLLERS } from 'src/common/constants/controllers.enum';
+import { ApiKeyAuthGuard } from 'src/common/guards/api-key.guard';
 
-@Controller('documents')
+@UseGuards(ApiKeyAuthGuard)
+@Controller(CONTROLLERS.DOCUMENTS)
 export class DocumentsController {
   constructor(private readonly documentService: DocumentService) {}
 
