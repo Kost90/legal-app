@@ -13,6 +13,7 @@ export class DocumentsController {
   @Post('create-power-of-attorney-property')
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'inline; filename=generatedPowerOfAttorney.pdf')
+  // TODO: поменять на только свой домен
   @Header('Content-Security-Policy', 'frame-ancestors *')
   async createPowerOfAttorneyProperty(@Body() body: CreatePowerOfAttorneyDto) {
     return this.documentService.createPowerOfAttorneyPropertyDocument(body);
