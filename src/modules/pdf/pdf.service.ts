@@ -20,11 +20,13 @@ export class PdfService {
     data: PowerOfAttorneyDetailsDto,
     documentLang: DOCUMENT_LANG,
   ): Promise<Buffer> {
-    const html = await this.templateService.renderPropertyPowerAttorneyTemplate(templateName, data, documentLang);
-    const page = await this.puppeteerService.getNewPage();
+    const [html, page] = await Promise.all([
+      this.templateService.renderPropertyPowerAttorneyTemplate(templateName, data, documentLang),
+      this.puppeteerService.getNewPage(),
+    ]);
 
     try {
-      await page.setContent(html, { waitUntil: 'networkidle0' });
+      await page.setContent(html, { waitUntil: 'load' });
 
       const buffer = await page.pdf({
         format: this.configService.get('format'),
@@ -32,7 +34,7 @@ export class PdfService {
         margin: this.configService.get('margin'),
       });
 
-      return await this.compressPdf(Buffer.from(buffer));
+      return Buffer.from(buffer);
     } finally {
       await page.close();
     }

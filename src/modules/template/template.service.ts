@@ -35,6 +35,11 @@ export class TemplateService {
     const city = this.normalizeCityName(data.propertyAddress.city);
     const propertyAddress = FormatToString(data.propertyAddress);
 
+    if (!propertyAddress) {
+      this.logger.error('Failed to create template, property address missed');
+      throw new BadRequestException('Failed to create template, property address missed');
+    }
+
     const normalizedCity = city ? city : data.propertyAddress.city;
     const authorityList = await this.findOrGenerateAuthorityList(normalizedCity, documentLang);
 

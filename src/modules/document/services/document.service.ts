@@ -1,4 +1,11 @@
-import { BadRequestException, Injectable, Logger, NotFoundException, StreamableFile } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  StreamableFile,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -8,10 +15,12 @@ import { PdfService } from 'src/modules/pdf/pdf.service';
 import { CreatePowerOfAttorneyDto } from '../dto/create-power-of-attorney.dto';
 import { StorageService } from 'src/modules/storage/storage.service';
 import { DocumentType } from 'src/modules/documentType/entities/document-type.entity';
+import { DocumentGenerationLog } from '../entities/document-generation.entity';
 
 @Injectable()
 export class DocumentService {
   private readonly logger = new Logger(DocumentService.name);
+  private readonly FREE_GENERATION_COOLDOWN_DAYS = 3;
   constructor(
     @InjectRepository(Document)
     private readonly documentRepository: Repository<Document>,
@@ -19,17 +28,29 @@ export class DocumentService {
     private readonly storageService: StorageService,
     @InjectRepository(DocumentType)
     private readonly documentTypeRepository: Repository<DocumentType>,
+    @InjectRepository(DocumentGenerationLog)
+    private readonly documentGenerationLogRepository: Repository<DocumentGenerationLog>,
   ) {}
 
   public async createPowerOfAttorneyPropertyDocument(
     body: CreatePowerOfAttorneyDto,
     userId?: string,
   ): Promise<StreamableFile> {
+    const { isPaid, email } = body;
+    const canGenerateFree = await this.canGenerateDocumentForFree(email, isPaid);
+
+    if (!canGenerateFree) {
+      this.logger.warn(`Limit free generation for email: ${email}`);
+      throw new ForbiddenException(
+        `Безкоштовна генерація буде доступна пізніше. Для платної генерації, будь ласка, сплатіть послугу.`,
+      );
+    }
+
     const templateName = `${body.documentType}.${body.documentLang}`;
     const pdf = await this.pdfService.generatePwoerOfAttorneyPropertyPdf(templateName, body.details, body.documentLang);
 
     if (!pdf) {
-      this.logger.error(`Failed to create pdf ${templateName}`);
+      this.logger.error(`Failed to create pdf ${templateName} for email ${email}`);
       throw new BadRequestException(`Failed to create pdf.`);
     }
 
@@ -55,7 +76,7 @@ export class DocumentService {
       user: userId ? { id: userId } : null,
     });
 
-    const document = await this.documentRepository.save(newDocument);
+    const [document] = await Promise.all([this.documentRepository.save(newDocument), this.recordFreeGeneration(email)]);
 
     if (!document) {
       this.logger.error(`Failed to save document to the db ${fileKey}`);
@@ -64,5 +85,41 @@ export class DocumentService {
 
     this.logger.log(`Document ${fileKey} created succsessfully`);
     return new StreamableFile(pdf);
+  }
+
+  private async canGenerateDocumentForFree(email: string, isPaid: boolean): Promise<boolean> {
+    if (isPaid) {
+      return true;
+    }
+
+    const logEntry = await this.documentGenerationLogRepository.findOne({ where: { email } });
+
+    if (!logEntry) {
+      return true;
+    }
+
+    const now = new Date();
+    const lastGenerationDate = new Date(logEntry.lastFreeGenerationAt);
+    const cooldownPeriod = this.FREE_GENERATION_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
+
+    if (now.getTime() - lastGenerationDate.getTime() > cooldownPeriod) {
+      return true;
+    }
+
+    return false;
+  }
+
+  async recordFreeGeneration(email: string): Promise<void> {
+    const logEntry = await this.documentGenerationLogRepository.findOne({ where: { email } });
+
+    if (logEntry) {
+      logEntry.lastFreeGenerationAt = new Date();
+      await this.documentGenerationLogRepository.save(logEntry);
+    } else {
+      await this.documentGenerationLogRepository.save({
+        email,
+        lastFreeGenerationAt: new Date(),
+      });
+    }
   }
 }
