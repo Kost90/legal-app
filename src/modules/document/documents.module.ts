@@ -7,9 +7,10 @@ import { DocumentType } from '../documentType/entities/document-type.entity';
 import { DocumentsController } from './documents.controller';
 import { DocumentService } from './services/document.service';
 import StorageModule from '../storage/storage.module';
+import { DocumentGenerationLog } from './entities/document-generation.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Document, DocumentType]), PdfModule, StorageModule],
+  imports: [TypeOrmModule.forFeature([Document, DocumentType, DocumentGenerationLog]), PdfModule, StorageModule],
   controllers: [DocumentsController],
   providers: [DocumentService],
   exports: [DocumentService],

@@ -1,4 +1,13 @@
-import { IsNotEmpty, IsString, IsEnum, ValidateNested, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsEnum,
+  ValidateNested,
+  IsOptional,
+  IsDateString,
+  IsEmail,
+  IsBoolean,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 import { DOCUMENT_LANG, DOCUMENT_TYPE } from 'src/common/constants/documents-type.enum';
@@ -44,7 +53,7 @@ export class PowerOfAttorneyDetailsDto {
   passport: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsDateString()
   passportIssueDate: string;
 
   @IsNotEmpty()
@@ -72,15 +81,22 @@ export class PowerOfAttorneyDetailsDto {
   city: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsDateString()
   date: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsDateString()
   validUntil: string;
 }
 
 export class CreatePowerOfAttorneyDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @IsBoolean()
+  isPaid: boolean;
+
   @IsEnum(DOCUMENT_TYPE)
   @IsNotEmpty()
   documentType: string;
