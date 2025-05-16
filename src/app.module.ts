@@ -14,6 +14,7 @@ import TemplateModule from './modules/template/template.module';
 import PdfModule from './modules/pdf/pdf.module';
 import DocumentModule from './modules/document/documents.module';
 import { AiModule } from './modules/ai/ai.module';
+import { EmailModule } from './modules/email/email.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AiModule } from './modules/ai/ai.module';
     PdfModule,
     TemplateModule,
     AiModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
