@@ -15,6 +15,7 @@ import PdfModule from './modules/pdf/pdf.module';
 import DocumentModule from './modules/document/documents.module';
 import { AiModule } from './modules/ai/ai.module';
 import { EmailModule } from './modules/email/email.module';
+import { EventEmitterModule } from './modules/event/event.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { EmailModule } from './modules/email/email.module';
     TemplateModule,
     AiModule,
     EmailModule,
+    EventEmitterModule,
   ],
   controllers: [AppController],
   providers: [AppService],

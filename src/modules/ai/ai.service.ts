@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { ConfigService } from '@nestjs/config';
 import { OpenAI } from 'openai';
 import { DOCUMENT_LANG } from 'src/common/constants/documents-type.enum';
+import { parseAndCleanMultiLanguageText, ParsedAiText } from 'src/common/utilities/ai-text-parser.utility';
 
 @Injectable()
 export class AiService {
@@ -14,9 +15,9 @@ export class AiService {
     });
   }
 
-  public async getAuthorityByCityForProperty(city: string, lang: DOCUMENT_LANG): Promise<string> {
+  public async getAuthorityByCityForProperty(city: string, lang: DOCUMENT_LANG): Promise<ParsedAiText> {
     try {
-      const prompt = this.generatePrompt(city, lang);
+      const prompt = this.generatePrompt(city);
       const completion = await this.aiClient.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
@@ -39,23 +40,42 @@ export class AiService {
         throw new NotFoundException('AI response was empty.');
       }
 
+      const parsedOutput = parseAndCleanMultiLanguageText(output);
+
+      if (!parsedOutput || !parsedOutput.uk || !parsedOutput.en) {
+        this.logger.error(`Failed to parse any language from AI response for city: ${city}. Raw: ${output}`);
+        throw new BadRequestException('Failed to parse AI response into languages.');
+      }
+
       this.logger.log(`Generated authority list for ${city} (${lang}) succsessfully`);
-      return output;
+      return parsedOutput;
     } catch (error) {
       this.logger.error(`AI generation failed for city ${city}:`, error);
       throw new BadRequestException('Failed to generate authority list.');
     }
   }
 
-  private generatePrompt(city: string, lang: DOCUMENT_LANG): string {
+  private generatePrompt(city: string): string {
     const ukExample =
-      'органах державної влади, управліннях та департаментах місцевого самоврядування Одеської міської ради, районних адміністраціях, нотаріальних конторах, Укрдержреєстрі та інших структурних підрозділах Міністерства юстиції України, БТІ та інших органах виконавчої влади';
+      'органах державної влади, управліннях та департаментах місцевого самоврядування Одеської міської ради, районних адміністраціях, нотаріальних конторах, Укрдержреєстрі та інших структурних підрозділах Міністерства юстиції України в Одеській області та інших органах виконавчої влади';
 
     const enExample =
-      'public authorities, departments and divisions of local self-government of Odesa City Council, district administrations, notary offices, the State Register and other structural units of the Ministry of Justice of Ukraine, BTI and other executive authorities';
+      'public authorities, departments and divisions of local self-government of Odesa City Council, district administrations, notary offices, the State Register and other structural units of the Ministry of Justice of Ukraine in Odesa region and other executive authorities';
 
-    return lang === DOCUMENT_LANG.UA
-      ? `Згенеруй юридично сформульований перелік органів влади, служб, державних та приватних структур, які беруть участь у переоформленні або приватизації нерухомості у місті ${city}. Форматуй як фрагмент з шаблону довіреності, через кому. Ось приклад формулювання: ${ukExample}.`
-      : `Generate a legally formulated list of government authorities, services, state and private institutions involved in the re-registration or privatization of real estate in the city of ${city}. Format it as a fragment from a power of attorney template, using commas. Here's an example: ${enExample}.`;
+    return `
+Згенеруй юридично сформульований перелік органів влади, служб, державних та приватних структур, які беруть участь у переоформленні або приватизації нерухомості у місті ${city}.
+Надай відповідь двома мовами: українською та англійською.
+Форматуй відповідь чітко, використовуючи наступні роздільники перед кожним мовним блоком:
+---UKRAINIAN_START---
+[тут текст українською, приклад: ${ukExample}]
+---UKRAINIAN_END---
+---ENGLISH_START---
+[тут текст англійською, приклад: ${enExample}]
+---ENGLISH_END---
+
+Переконайся, що текст для кожної мови знаходиться МІЖ відповідними START та END маркерами.
+Не додавай жодних інших пояснень чи тексту поза цими блоками.
+Форматуй список через кому, як фрагмент з шаблону довіреності.
+`;
   }
 }
