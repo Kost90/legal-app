@@ -4,6 +4,7 @@ import * as Handlebars from 'handlebars';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+import { OnEvent } from '@nestjs/event-emitter';
 
 import { AuthorityList } from './entity/authorityList.entity';
 import { Repository } from 'typeorm';
@@ -14,6 +15,9 @@ import { CITIES } from 'src/common/constants/city.enum';
 import { FormatToString } from 'src/common/utilities/formatToString.utility';
 import { IPowerOfAttorneyPropert } from './types';
 import { AiService } from '../ai/ai.service';
+import { AiAuthorityListGeneratedEvent } from './dto/authoriti-list-event.dto';
+import { EventService } from '../event/event.service';
+import { messages } from '../event/messages/messages';
 
 @Injectable()
 export class TemplateService {
@@ -24,6 +28,7 @@ export class TemplateService {
     @InjectRepository(AuthorityList)
     private readonly authorityListRepo: Repository<AuthorityList>,
     private readonly aiService: AiService,
+    private readonly eventService: EventService,
   ) {}
 
   public async renderPropertyPowerAttorneyTemplate(
@@ -74,7 +79,7 @@ export class TemplateService {
   private async findOrGenerateAuthorityList(city: string, lang: DOCUMENT_LANG): Promise<string> {
     if (city) {
       const authority = await this.authorityListRepo.findOne({
-        where: { document: DOCUMENT_TYPE.PAWER_OF_ATTORNEY, city },
+        where: { document: DOCUMENT_TYPE.PAWER_OF_ATTORNEY_PROPERTY, city },
       });
 
       if (authority) {
@@ -84,7 +89,21 @@ export class TemplateService {
       this.logger.warn(`Authority list not found in DB for city: ${city}. Generating via AI...`);
     }
 
-    return await this.aiService.getAuthorityByCityForProperty(city, lang);
+    const aiGeneratedList = await this.aiService.getAuthorityByCityForProperty(city, lang);
+
+    if (aiGeneratedList && city) {
+      const event = new AiAuthorityListGeneratedEvent(
+        city,
+        lang,
+        aiGeneratedList.uk,
+        aiGeneratedList.en,
+        DOCUMENT_TYPE.PAWER_OF_ATTORNEY_PROPERTY,
+      );
+      this.eventService.onGeneratedAuthoritySave(event);
+      this.logger.log(`Emitted ai.authority_list.generated event for city: ${city}`);
+    }
+
+    return lang === DOCUMENT_LANG.UA ? aiGeneratedList.uk : aiGeneratedList.en;
   }
 
   private normalizeCityName(input: string): CITIES {
@@ -94,5 +113,37 @@ export class TemplateService {
       return null;
     }
     return normalized;
+  }
+
+  @OnEvent(messages.SAVE_GENERATED_AUTHORITY)
+  async handleAiAuthorityListGenerated(payload: AiAuthorityListGeneratedEvent) {
+    this.logger.log(
+      `Handling ai.authority_list.generated event for city: ${payload.city}, type: ${payload.documentType}`,
+    );
+    try {
+      let authorityEntry = await this.authorityListRepo.findOne({
+        where: { city: payload.city, document: payload.documentType },
+      });
+
+      if (!authorityEntry) {
+        authorityEntry = this.authorityListRepo.create({
+          city: payload.city,
+          document: payload.documentType,
+          authoritiesUk: payload.authoritiesUk,
+          authoritiesEn: payload.authoritiesEn,
+        });
+        this.logger.log(`Creating new AuthorityList entry for city: ${payload.city}, type: ${payload.documentType}`);
+      }
+
+      await this.authorityListRepo.save(authorityEntry);
+      this.logger.log(
+        `Successfully saved/updated AI-generated authority list for city: ${payload.city}, lang: ${payload.lang}, type: ${payload.documentType}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to save AI-generated authority list for city: ${payload.city} from event. Error:`,
+        error,
+      );
+    }
   }
 }
