@@ -1,9 +1,11 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './services/auth.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { SignInDto } from './dto/sign-in.dto';
-import { RefreshTokenDto } from './dto/tokens.dto';
+import { RefreshTokenDto, VerifyEmailDto, VerifyTokenDto } from './dto/tokens.dto';
+import { ApiKeyAuthGuard } from 'src/common/guards/api-key.guard';
 
+@UseGuards(ApiKeyAuthGuard)
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -21,5 +23,15 @@ export class AuthController {
   @Post('refresh-token')
   refreshToken(@Body() { token }: RefreshTokenDto) {
     return this.authService.refreshToken(token);
+  }
+
+  @Post('send-verification-email')
+  sendVerifiedEmail(@Body() { email }: VerifyEmailDto) {
+    return this.authService.sendVerifiedEmail(email);
+  }
+
+  @Post('verify-email')
+  verifyEmail(@Body() { token }: VerifyTokenDto) {
+    return this.authService.verifyEmail(token);
   }
 }

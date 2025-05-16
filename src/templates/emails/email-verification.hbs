@@ -1,0 +1,66 @@
+<html lang='uk'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Підтвердження Email</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f8f9fa;
+        color: #333;
+      }
+      .container {
+        background-color: #ffffff;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .button {
+        background-color: #007bff;
+        color: white !important;
+        padding: 12px 25px;
+        text-decoration: none;
+        border-radius: 5px;
+        display: inline-block;
+        font-weight: bold;
+      }
+      .footer {
+        margin-top: 30px;
+        text-align: center;
+        font-size: 0.9em;
+        color: #6c757d;
+      }
+    </style>
+  </head>
+  <body>
+    <div class='container'>
+      <h1 style='color: #007bff; text-align: center;'>Підтвердьте ваш Email</h1>
+      <p>Вітаємо,</p>
+      <p>
+        Дякуємо за ваш інтерес до
+        {{emailFromName}}. Щоб безкоштовно згенерувати документ, будь ласка, підтвердьте вашу адресу електронної пошти,
+        натиснувши кнопку нижче:
+      </p>
+      <p style='text-align: center; margin: 30px 0;'>
+        <a href='{{verificationLink}}' class='button'>Підтвердити Email</a>
+      </p>
+      <p>
+        Якщо кнопка не працює, скопіюйте та вставте наступне посилання в адресний рядок вашого браузера:
+      </p>
+      <p><a href='{{verificationLink}}'>{{verificationLink}}</a></p>
+      <p>
+        Це посилання дійсне протягом обмеженого часу. Якщо ви не запитували цей лист, будь ласка, проігноруйте його.
+      </p>
+      <p>З повагою,<br />Команда {{emailFromName}}</p>
+    </div>
+    {{!--
+    <div class='footer'>
+      <p>&copy; {{year}} {{emailFromName}}. Всі права захищені.</p>
+    </div>
+    --}}
+  </body>
+</html>

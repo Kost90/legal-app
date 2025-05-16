@@ -94,22 +94,28 @@ export class DocumentService {
 
     const logEntry = await this.documentGenerationLogRepository.findOne({ where: { email } });
 
-    if (!logEntry) {
+    if (!logEntry.isVerified) {
+      throw new BadRequestException('You need to verify email');
+    }
+
+    if (logEntry.isVerified && !logEntry.lastFreeGenerationAt) {
       return true;
     }
 
-    const now = new Date();
-    const lastGenerationDate = new Date(logEntry.lastFreeGenerationAt);
-    const cooldownPeriod = this.FREE_GENERATION_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
+    if (logEntry.isVerified && logEntry.lastFreeGenerationAt) {
+      const now = new Date();
+      const lastGenerationDate = new Date(logEntry.lastFreeGenerationAt);
+      const cooldownPeriod = this.FREE_GENERATION_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
 
-    if (now.getTime() - lastGenerationDate.getTime() > cooldownPeriod) {
-      return true;
+      if (now.getTime() - lastGenerationDate.getTime() > cooldownPeriod) {
+        return true;
+      }
     }
 
     return false;
   }
 
-  async recordFreeGeneration(email: string): Promise<void> {
+  private async recordFreeGeneration(email: string): Promise<void> {
     const logEntry = await this.documentGenerationLogRepository.findOne({ where: { email } });
 
     if (logEntry) {

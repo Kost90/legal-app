@@ -1,4 +1,11 @@
-import { BadRequestException, ForbiddenException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -8,16 +15,23 @@ import { AlreadyExistsException } from 'src/common/exceptions/common.exception';
 import { CreateUserDto } from 'src/modules/user/dto/create-user.dto';
 import { User } from 'src/modules/user/entities/user.entity';
 import { UserService } from 'src/modules/user/services/user.service';
+import { EmailService } from 'src/modules/email/email.service';
 import { SignInDto } from '../dto/sign-in.dto';
 import { TokensDto } from '../dto/tokens.dto';
+import { DocumentGenerationLog } from 'src/modules/document/entities/document-generation.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger();
   constructor(
     private readonly userService: UserService,
+    private readonly emailService: EmailService,
     private configService: ConfigService,
     private jwtService: JwtService,
+    @InjectRepository(DocumentGenerationLog)
+    private documentGenerationLogRepo: Repository<DocumentGenerationLog>,
   ) {}
 
   async registerUser(createUserDto: CreateUserDto): Promise<SuccessResponseDTO<Omit<User, 'passwordHash'>>> {
@@ -121,6 +135,67 @@ export class AuthService {
     };
   }
 
+  public async sendVerifiedEmail(email: string): Promise<{ message: string }> {
+    const isExistLog = await this.documentGenerationLogRepo.findOne({ where: { email: email } });
+
+    if (isExistLog && isExistLog.isVerified) {
+      throw new BadRequestException('Email already is verified.');
+    }
+
+    if (isExistLog && !isExistLog.isVerified) {
+      const actionToken = await this.generateVerificationToken(email);
+      await this.emailService.sendVerificationEmail(email, actionToken);
+      return { message: 'Please verify your email.' };
+    }
+
+    const actionToken = await this.generateVerificationToken(email);
+    await this.emailService.sendVerificationEmail(email, actionToken);
+    await this.documentGenerationLogRepo.save({
+      email: email,
+      lastFreeGenerationAt: null,
+      isVerified: false,
+    });
+    return { message: 'Please verify your email.' };
+  }
+
+  async verifyEmail(actionToken: string): Promise<{
+    message: string;
+  }> {
+    try {
+      if (!actionToken || typeof actionToken !== 'string') {
+        throw new BadRequestException('Token must be a valid string.');
+      }
+
+      const payload: { email: string } = await this.jwtService.verifyAsync(actionToken, {
+        secret: this.configService.get('JWT_SECRET'),
+      });
+
+      if (!payload || !payload.email) {
+        throw new BadRequestException('Invalid or expired verification token.');
+      }
+
+      await this.documentGenerationLogRepo.update(
+        { email: payload.email },
+        {
+          isVerified: true,
+        },
+      );
+
+      return { message: 'Email verified successfully' };
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new BadRequestException('Malformed token. Ensure it is correctly formatted.');
+      }
+      if (error instanceof Error && error.name === 'JsonWebTokenError') {
+        throw new BadRequestException('Invalid token format or signature.');
+      }
+      if (error instanceof Error && error.name === 'TokenExpiredError') {
+        throw new BadRequestException('Token has expired. Please request a new one.');
+      }
+      throw new InternalServerErrorException('Something went wrong during verification.');
+    }
+  }
+
   private async hashPassword(pass: string): Promise<string> {
     const password = await bcrypt.hash(pass, Number(this.configService.get('BCRYPT_SALT')));
     return password;
@@ -128,5 +203,16 @@ export class AuthService {
 
   private async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
     return await bcrypt.compare(password, hashedPassword);
+  }
+
+  private async generateVerificationToken(email: string): Promise<string> {
+    console.log(this.configService.get('JWT_ACTION_EXPIRATION'));
+    return this.jwtService.signAsync(
+      { email: email },
+      {
+        secret: this.configService.get('JWT_SECRET'),
+        expiresIn: this.configService.get('JWT_ACTION_EXPIRATION'),
+      },
+    );
   }
 }

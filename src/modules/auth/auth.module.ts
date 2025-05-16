@@ -8,11 +8,13 @@ import { User } from '../user/entities/user.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './services/auth.service';
 import UserModule from '../user/users.module';
+import { EmailModule } from '../email/email.module';
+import { DocumentGenerationLog } from '../document/entities/document-generation.entity';
 
 @Module({
   controllers: [AuthController],
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, DocumentGenerationLog]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -22,6 +24,7 @@ import UserModule from '../user/users.module';
       }),
     }),
     UserModule,
+    EmailModule,
   ],
   exports: [AuthService],
   providers: [AuthService],
