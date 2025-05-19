@@ -32,10 +32,7 @@ export class DocumentService {
     private readonly documentGenerationLogRepository: Repository<DocumentGenerationLog>,
   ) {}
 
-  public async createPowerOfAttorneyPropertyDocument(
-    body: CreatePowerOfAttorneyDto,
-    userId?: string,
-  ): Promise<StreamableFile> {
+  public async createPowerOfAttorneyDocument(body: CreatePowerOfAttorneyDto, userId?: string): Promise<StreamableFile> {
     const { isPaid, email } = body;
     const canGenerateFree = await this.canGenerateDocumentForFree(email, isPaid);
 
