@@ -17,6 +17,7 @@ export class AiService {
 
   public async getAuthorityByCityForProperty(city: string, lang: DOCUMENT_LANG): Promise<ParsedAiText> {
     try {
+      // TODO: По типу документа, подставлять нужный промт
       const prompt = this.generatePrompt(city);
       const completion = await this.aiClient.chat.completions.create({
         model: 'gpt-3.5-turbo',

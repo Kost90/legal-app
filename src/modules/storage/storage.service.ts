@@ -1,7 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { Readable } from 'stream';
 
 @Injectable()
 export class StorageService {
@@ -19,7 +20,7 @@ export class StorageService {
     this.bucketName = configService.get('name');
   }
 
-  async uploadFile(key: string, body: Buffer, contentType: string) {
+  public async uploadFile(key: string, body: Buffer, contentType: string) {
     try {
       const command = new PutObjectCommand({
         Bucket: this.bucketName,
@@ -65,6 +66,34 @@ export class StorageService {
     } catch (error) {
       this.logger.error(`Failed to delete file: ${key}`, error);
       throw new InternalServerErrorException('Failed to delete file');
+    }
+  }
+
+  public async downloadFile(key: string): Promise<Buffer> {
+    try {
+      const command = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      });
+
+      const response = await this.s3.send(command);
+
+      if (!response.Body || !(response.Body instanceof Readable)) {
+        throw new BadRequestException('Invalid response body from Storage');
+      }
+
+      const chunks: Buffer[] = [];
+      for await (const chunk of response.Body) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+      }
+
+      const fileBuffer = Buffer.concat(chunks);
+      this.logger.log(`File ${key} downloaded successfully`);
+      return fileBuffer;
+    } catch (error) {
+      this.logger.error(`Failed to download file: ${key}`, error);
+      throw new InternalServerErrorException('Failed to download file');
     }
   }
 }

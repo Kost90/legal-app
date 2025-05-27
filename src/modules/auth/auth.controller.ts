@@ -27,7 +27,7 @@ export class AuthController {
 
   @Post('send-verification-email')
   sendVerifiedEmail(@Body() { email }: VerifyEmailDto) {
-    return this.authService.sendVerifiedEmail(email);
+    return this.authService.sendVerifiedEmailForFreeGen(email);
   }
 
   @Post('verify-email')

@@ -72,6 +72,7 @@ export class PowerOfAttorneyDetailsDto {
   @IsString()
   representativeAddress: string;
 
+  @IsOptional()
   @IsNotEmpty()
   @Type(() => PropertyAddres)
   propertyAddress: PropertyAddres;

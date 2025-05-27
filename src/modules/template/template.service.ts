@@ -38,6 +38,7 @@ export class TemplateService {
   ): Promise<string> {
     const templateStr = this.loadTemplate(templateName);
     const city = this.normalizeCityName(data.propertyAddress.city);
+    // TODO: Передать сюда тип документа и по типу документа, смотреть нужен ли адрес недвижимости, сделать отдельный метод который будет смотреть, что надо
     const propertyAddress = FormatToString(data.propertyAddress);
 
     if (!propertyAddress) {
