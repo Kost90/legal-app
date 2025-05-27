@@ -14,6 +14,9 @@ export class Document extends BaseEntity {
   @Column({ nullable: true })
   expiredAt: string;
 
+  @Column()
+  lang: string;
+
   @ManyToOne(() => User, (user) => user.documents, {
     onDelete: 'CASCADE',
     nullable: true,
