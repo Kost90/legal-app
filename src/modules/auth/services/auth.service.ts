@@ -52,7 +52,8 @@ export class AuthService {
     const { passwordHash, ...createdUserWithouPass } = createdUser;
 
     this.logger.log(`User with ${createdUser.email} registered successfully`);
-    return { data: createdUserWithouPass, statusCode: HttpStatus.OK, message: 'User registered successfully' };
+    const { message } = await this.sendVerifiedEmail(createdUser.email);
+    return { data: createdUserWithouPass, statusCode: HttpStatus.OK, message: message };
   }
 
   public async signIn(userCredentials: SignInDto): Promise<SuccessResponseDTO<TokensDto>> {
@@ -60,6 +61,10 @@ export class AuthService {
 
     if (!user) {
       throw new BadRequestException('Wrong email or password');
+    }
+
+    if (!user.isEmailVerified) {
+      throw new ForbiddenException('Email is not verified');
     }
 
     const tokens = await this.generateTokens(user);
@@ -135,7 +140,7 @@ export class AuthService {
     };
   }
 
-  public async sendVerifiedEmail(email: string): Promise<{ message: string }> {
+  public async sendVerifiedEmailForFreeGen(email: string): Promise<{ message: string }> {
     const isExistLog = await this.documentGenerationLogRepo.findOne({ where: { email: email } });
 
     if (isExistLog && isExistLog.isVerified) {
@@ -155,6 +160,24 @@ export class AuthService {
       lastFreeGenerationAt: null,
       isVerified: false,
     });
+    return { message: 'Please verify your email.' };
+  }
+
+  private async sendVerifiedEmail(email: string): Promise<{ message: string }> {
+    const user = await this.userService.getUserByEmail(email);
+
+    if (user && user.isEmailVerified) {
+      throw new BadRequestException('Email already is verified.');
+    }
+
+    if (user && !user.isEmailVerified) {
+      const actionToken = await this.generateVerificationToken(email);
+      await this.emailService.sendVerificationEmail(email, actionToken);
+      return { message: 'Please verify your email.' };
+    }
+
+    const actionToken = await this.generateVerificationToken(email);
+    await this.emailService.sendVerificationEmail(email, actionToken);
     return { message: 'Please verify your email.' };
   }
 

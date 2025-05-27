@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, StreamableFile } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
 import { Repository } from 'typeorm';
@@ -38,6 +38,16 @@ export class UserService {
     }
 
     this.logger.log(`User with user id: ${user.id}, succsessfully found`);
+    return plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true });
+  }
+
+  public async findUserById(userId: string): Promise<UserResponseDto> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundException(`User with Id: ${user.id}, not found`);
+    }
+
     return plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true });
   }
 

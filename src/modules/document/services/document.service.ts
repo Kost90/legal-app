@@ -16,6 +16,9 @@ import { CreatePowerOfAttorneyDto } from '../dto/create-power-of-attorney.dto';
 import { StorageService } from 'src/modules/storage/storage.service';
 import { DocumentType } from 'src/modules/documentType/entities/document-type.entity';
 import { DocumentGenerationLog } from '../entities/document-generation.entity';
+import { UserService } from 'src/modules/user/services/user.service';
+import { DocumentResponseDto } from '../dto/document-response.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class DocumentService {
@@ -30,6 +33,7 @@ export class DocumentService {
     private readonly documentTypeRepository: Repository<DocumentType>,
     @InjectRepository(DocumentGenerationLog)
     private readonly documentGenerationLogRepository: Repository<DocumentGenerationLog>,
+    private readonly userService: UserService,
   ) {}
 
   public async createPowerOfAttorneyDocument(body: CreatePowerOfAttorneyDto, userId?: string): Promise<StreamableFile> {
@@ -66,11 +70,13 @@ export class DocumentService {
       throw new NotFoundException(`Document type ${body.documentType} not found`);
     }
 
-    // TODO: or change to find user, before save
+    const user = userId ? await this.userService.findUserById(userId) : null;
+
     const newDocument = this.documentRepository.create({
       fileKey,
       documentType: documentTypeId,
-      user: userId ? { id: userId } : null,
+      lang: body.documentLang,
+      user,
     });
 
     const [document] = await Promise.all([this.documentRepository.save(newDocument), this.recordFreeGeneration(email)]);
@@ -110,6 +116,109 @@ export class DocumentService {
     }
 
     return false;
+  }
+
+  public async getUserDocumentsByType(
+    userId: string,
+    documentType: string,
+    documentLang?: string,
+  ): Promise<DocumentResponseDto[]> {
+    const queryBuilder = this.documentRepository
+      .createQueryBuilder('document')
+      // TODO: If need to select any fields from user or documentType entities use leftJoinAndSelect
+      .leftJoin('document.documentType', 'documentType')
+      .leftJoin('document.user', 'user')
+      .where('user.id = :userId', { userId })
+      .andWhere('documentType.name = :documentType', { documentType });
+
+    if (documentLang) {
+      queryBuilder.andWhere('document.lang = :documentLang', { documentLang });
+    }
+
+    const userDocuments = await queryBuilder.getMany();
+
+    if (!userDocuments.length) {
+      throw new NotFoundException('User documents not found');
+    }
+
+    return plainToInstance(DocumentResponseDto, userDocuments, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  public async downloadUserDocument(documentId: string, userId: string): Promise<StreamableFile> {
+    const user = await this.userService.findUserById(userId);
+
+    if (!user) {
+      throw new NotFoundException(`User with Id: ${userId}, not found`);
+    }
+
+    const document = await this.documentRepository.findOne({
+      where: { id: documentId },
+      relations: ['user'],
+    });
+
+    if (!document) {
+      throw new NotFoundException(`Document with Id: ${documentId}, not found`);
+    }
+
+    if (document.user.id !== userId) {
+      throw new ForbiddenException('You do not have access to this document');
+    }
+
+    const fileBuffer = await this.storageService.downloadFile(document.fileKey);
+    this.logger.log(`User ${userId} downloaded document ${documentId}`);
+
+    return new StreamableFile(fileBuffer);
+  }
+
+  public async getDocumentPresignedUrl(documentId: string, userId: string): Promise<string> {
+    const user = await this.userService.findUserById(userId);
+
+    if (!user) {
+      throw new NotFoundException(`User with Id: ${userId}, not found`);
+    }
+
+    const document = await this.documentRepository.findOne({
+      where: { id: documentId },
+      relations: ['user'],
+    });
+    if (!document || document.user.id !== user.id) {
+      throw new NotFoundException('Document not found or access denied');
+    }
+
+    const url = await this.storageService.getPresignedUrl(document.fileKey);
+
+    return url;
+  }
+
+  public async removeDocument(documentId: string, userId: string): Promise<string> {
+    const user = await this.userService.findUserById(userId);
+    if (!user) {
+      throw new NotFoundException(`User with Id: ${userId} not found`);
+    }
+
+    const document = await this.documentRepository.findOne({
+      where: { id: documentId },
+      relations: ['user'],
+    });
+
+    if (!document) {
+      throw new NotFoundException(`Document with Id: ${documentId} not found`);
+    }
+
+    if (document.user.id !== user.id) {
+      throw new ForbiddenException('You do not have permission to delete this document');
+    }
+
+    try {
+      await Promise.all([this.storageService.deleteFile(document.fileKey), this.documentRepository.delete(documentId)]);
+      this.logger.log(`User ${user.id} deleted document ${documentId}`);
+      return 'document deleted succsessfully';
+    } catch (error) {
+      this.logger.error(`Failed to delete document ${documentId}`, error);
+      throw new BadRequestException('Failed to delete document');
+    }
   }
 
   private async recordFreeGeneration(email: string): Promise<void> {

@@ -1,4 +1,5 @@
 import { Exclude, Expose, Type } from 'class-transformer';
+import { IsOptional } from 'class-validator';
 import { DocumentResponseDto } from 'src/modules/document/dto/document-response.dto';
 
 @Exclude()
@@ -20,5 +21,6 @@ export class UserResponseDto {
 
   @Expose()
   @Type(() => DocumentResponseDto)
-  documents: DocumentResponseDto[];
+  @IsOptional()
+  documents?: DocumentResponseDto[];
 }
