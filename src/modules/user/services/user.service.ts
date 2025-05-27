@@ -15,7 +15,7 @@ export class UserService {
   public async getUserByEmail(email: string): Promise<Omit<User, 'passwordHash'>> {
     return this.userRepository.findOne({
       where: { email },
-      select: ['createdAt', 'email', 'firstName', 'id', 'lastName', 'phone', 'updatedAt'],
+      select: ['createdAt', 'email', 'firstName', 'id', 'lastName', 'phone', 'updatedAt', 'isEmailVerified'],
     });
   }
 

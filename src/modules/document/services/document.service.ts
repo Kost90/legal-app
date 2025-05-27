@@ -76,6 +76,7 @@ export class DocumentService {
       fileKey,
       documentType: documentTypeId,
       lang: body.documentLang,
+      isPaid: body.isPaid ? body.isPaid : false,
       user,
     });
 

@@ -78,7 +78,7 @@ export class AuthService {
 
   public async refreshToken(body: string) {
     const payload = this.jwtService.verify<{ id: string; email: string }>(body, {
-      secret: this.configService.get('JWT_REFRESH_SECRET'),
+      secret: this.configService.get('jwtRefreshSecret'),
     });
 
     const user = await this.userService.getUserByEmail(payload.email);
@@ -119,18 +119,19 @@ export class AuthService {
       email: user.email,
     };
 
+    console.log(this.configService.get('jwtExpiration'));
     const [accessToken, refreshToken, actionToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get('JWT_SECRET'),
-        expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION'),
+        secret: this.configService.get('jwtSecret'),
+        expiresIn: this.configService.get('jwtExpiration'),
       }),
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get('JWT_REFRESH_SECRET'),
-        expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION'),
+        secret: this.configService.get('jwtRefreshSecret'),
+        expiresIn: this.configService.get('jwtRefreshExpiration'),
       }),
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get('JWT_ACTION_SECRET'),
-        expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION'),
+        secret: this.configService.get('jwtActionSecret'),
+        expiresIn: this.configService.get('jwtExpiration'),
       }),
     ]);
     return {
@@ -190,7 +191,7 @@ export class AuthService {
       }
 
       const payload: { email: string } = await this.jwtService.verifyAsync(actionToken, {
-        secret: this.configService.get('JWT_SECRET'),
+        secret: this.configService.get('jwtActionSecret'),
       });
 
       if (!payload || !payload.email) {
@@ -229,12 +230,11 @@ export class AuthService {
   }
 
   private async generateVerificationToken(email: string): Promise<string> {
-    console.log(this.configService.get('JWT_ACTION_EXPIRATION'));
     return this.jwtService.signAsync(
       { email: email },
       {
-        secret: this.configService.get('JWT_SECRET'),
-        expiresIn: this.configService.get('JWT_ACTION_EXPIRATION'),
+        secret: this.configService.get('jwtActionSecret'),
+        expiresIn: this.configService.get('jwtExpiration'),
       },
     );
   }
