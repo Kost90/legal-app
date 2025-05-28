@@ -18,6 +18,7 @@ import { AiService } from '../ai/ai.service';
 import { AiAuthorityListGeneratedEvent } from './dto/authoriti-list-event.dto';
 import { EventService } from '../event/event.service';
 import { messages } from '../event/messages/messages';
+import { formatDateByLang } from 'src/common/utilities/date-formatter.utility';
 
 @Injectable()
 export class TemplateService {
@@ -51,6 +52,9 @@ export class TemplateService {
 
     const updatedData: IPowerOfAttorneyPropert = {
       ...data,
+      date: formatDateByLang(data.date, documentLang),
+      passportIssueDate: formatDateByLang(data.passportIssueDate, documentLang),
+      validUntil: formatDateByLang(data.validUntil, documentLang),
       propertyAddress,
       authoritiesList: authorityList,
     };

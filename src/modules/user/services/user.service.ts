@@ -1,10 +1,11 @@
-import { Injectable, Logger, NotFoundException, StreamableFile } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserResponseDto } from '../dto/get-user.dto';
+import { SuccessResponseDTO } from 'src/common/dto/succsess-response.dto';
 
 @Injectable()
 export class UserService {
@@ -30,7 +31,7 @@ export class UserService {
     return await this.userRepository.save({ passwordHash: password, ...user });
   }
 
-  public async getUserInformation(userId: string): Promise<UserResponseDto> {
+  public async getUserInformation(userId: string): Promise<SuccessResponseDTO<UserResponseDto>> {
     const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['documents'] });
 
     if (!user) {
@@ -38,7 +39,11 @@ export class UserService {
     }
 
     this.logger.log(`User with user id: ${user.id}, succsessfully found`);
-    return plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true });
+    return {
+      data: plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true }),
+      message: 'User information fetched succsessfully',
+      statusCode: HttpStatus.OK,
+    };
   }
 
   public async findUserById(userId: string): Promise<UserResponseDto> {
@@ -50,6 +55,4 @@ export class UserService {
 
     return plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true });
   }
-
-  // TODO: Make endpoint for creating document by user
 }
