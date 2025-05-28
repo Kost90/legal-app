@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
@@ -14,11 +15,11 @@ import { Repository } from 'typeorm';
 import { PdfService } from 'src/modules/pdf/pdf.service';
 import { CreatePowerOfAttorneyDto } from '../dto/create-power-of-attorney.dto';
 import { StorageService } from 'src/modules/storage/storage.service';
-import { DocumentType } from 'src/modules/documentType/entities/document-type.entity';
 import { DocumentGenerationLog } from '../entities/document-generation.entity';
 import { UserService } from 'src/modules/user/services/user.service';
 import { DocumentResponseDto } from '../dto/document-response.dto';
 import { plainToInstance } from 'class-transformer';
+import { SuccessResponseDTO } from 'src/common/dto/succsess-response.dto';
 
 @Injectable()
 export class DocumentService {
@@ -29,8 +30,6 @@ export class DocumentService {
     private readonly documentRepository: Repository<Document>,
     private readonly pdfService: PdfService,
     private readonly storageService: StorageService,
-    @InjectRepository(DocumentType)
-    private readonly documentTypeRepository: Repository<DocumentType>,
     @InjectRepository(DocumentGenerationLog)
     private readonly documentGenerationLogRepository: Repository<DocumentGenerationLog>,
     private readonly userService: UserService,
@@ -64,17 +63,11 @@ export class DocumentService {
       throw new BadRequestException(`Failed to save pdf.`);
     }
 
-    const documentTypeId = await this.documentTypeRepository.findOne({ where: { name: body.documentType } });
-
-    if (!documentTypeId) {
-      throw new NotFoundException(`Document type ${body.documentType} not found`);
-    }
-
     const user = userId ? await this.userService.findUserById(userId) : null;
 
     const newDocument = this.documentRepository.create({
       fileKey,
-      documentType: documentTypeId,
+      type: body.documentType,
       lang: body.documentLang,
       isPaid: body.isPaid ? body.isPaid : false,
       user,
@@ -123,14 +116,12 @@ export class DocumentService {
     userId: string,
     documentType: string,
     documentLang?: string,
-  ): Promise<DocumentResponseDto[]> {
+  ): Promise<SuccessResponseDTO<DocumentResponseDto[]>> {
     const queryBuilder = this.documentRepository
       .createQueryBuilder('document')
-      // TODO: If need to select any fields from user or documentType entities use leftJoinAndSelect
-      .leftJoin('document.documentType', 'documentType')
       .leftJoin('document.user', 'user')
       .where('user.id = :userId', { userId })
-      .andWhere('documentType.name = :documentType', { documentType });
+      .andWhere('document.type = :documentType', { documentType });
 
     if (documentLang) {
       queryBuilder.andWhere('document.lang = :documentLang', { documentLang });
@@ -142,9 +133,13 @@ export class DocumentService {
       throw new NotFoundException('User documents not found');
     }
 
-    return plainToInstance(DocumentResponseDto, userDocuments, {
-      excludeExtraneousValues: true,
-    });
+    return {
+      data: plainToInstance(DocumentResponseDto, userDocuments, {
+        excludeExtraneousValues: true,
+      }),
+      message: 'User documents fetched succsessfully',
+      statusCode: HttpStatus.OK,
+    };
   }
 
   public async downloadUserDocument(documentId: string, userId: string): Promise<StreamableFile> {
@@ -173,7 +168,7 @@ export class DocumentService {
     return new StreamableFile(fileBuffer);
   }
 
-  public async getDocumentPresignedUrl(documentId: string, userId: string): Promise<string> {
+  public async getDocumentPresignedUrl(documentId: string, userId: string): Promise<SuccessResponseDTO<string>> {
     const user = await this.userService.findUserById(userId);
 
     if (!user) {
@@ -190,10 +185,10 @@ export class DocumentService {
 
     const url = await this.storageService.getPresignedUrl(document.fileKey);
 
-    return url;
+    return { data: url, message: 'Presigned url fetched succsessfulle', statusCode: HttpStatus.OK };
   }
 
-  public async removeDocument(documentId: string, userId: string): Promise<string> {
+  public async removeDocument(documentId: string, userId: string): Promise<SuccessResponseDTO<string>> {
     const user = await this.userService.findUserById(userId);
     if (!user) {
       throw new NotFoundException(`User with Id: ${userId} not found`);
@@ -215,7 +210,11 @@ export class DocumentService {
     try {
       await Promise.all([this.storageService.deleteFile(document.fileKey), this.documentRepository.delete(documentId)]);
       this.logger.log(`User ${user.id} deleted document ${documentId}`);
-      return 'document deleted succsessfully';
+      return {
+        data: 'document deleted succsessfully',
+        message: 'document deleted succsessfully',
+        statusCode: HttpStatus.OK,
+      };
     } catch (error) {
       this.logger.error(`Failed to delete document ${documentId}`, error);
       throw new BadRequestException('Failed to delete document');

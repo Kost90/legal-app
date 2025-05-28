@@ -119,7 +119,6 @@ export class AuthService {
       email: user.email,
     };
 
-    console.log(this.configService.get('jwtExpiration'));
     const [accessToken, refreshToken, actionToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: this.configService.get('jwtSecret'),
@@ -162,6 +161,29 @@ export class AuthService {
       isVerified: false,
     });
     return { message: 'Please verify your email.' };
+  }
+
+  public async logout(refreshToken: string): Promise<SuccessResponseDTO<null>> {
+    try {
+      await this.jwtService.verify(refreshToken, {
+        secret: this.configService.get('jwtRefreshSecret'),
+      });
+      return {
+        data: null,
+        statusCode: HttpStatus.OK,
+        message: 'Logout successful',
+      };
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new BadRequestException('Malformed token. Ensure it is correctly formatted.');
+      }
+      if (error instanceof Error && error.name === 'JsonWebTokenError') {
+        throw new BadRequestException('Invalid token format or signature.');
+      }
+      if (error instanceof Error && error.name === 'TokenExpiredError') {
+        throw new BadRequestException('Token has expired. Please request a new one.');
+      }
+    }
   }
 
   private async sendVerifiedEmail(email: string): Promise<{ message: string }> {

@@ -3,7 +3,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import PdfModule from '../pdf/pdf.module';
 import { Document } from './entities/document.entity';
-import { DocumentType } from '../documentType/entities/document-type.entity';
 import { DocumentsController } from './documents.controller';
 import { DocumentService } from './services/document.service';
 import StorageModule from '../storage/storage.module';
@@ -12,7 +11,7 @@ import UserModule from '../user/users.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Document, DocumentType, DocumentGenerationLog]),
+    TypeOrmModule.forFeature([Document, DocumentGenerationLog]),
     PdfModule,
     StorageModule,
     forwardRef(() => UserModule),
