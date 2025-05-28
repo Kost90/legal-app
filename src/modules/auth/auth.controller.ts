@@ -20,6 +20,11 @@ export class AuthController {
     return this.authService.signIn(userCredential);
   }
 
+  @Post('logout')
+  logout(@Body() { refreshToken }: { refreshToken: string }) {
+    return this.authService.logout(refreshToken);
+  }
+
   @Post('refresh-token')
   refreshToken(@Body() { token }: RefreshTokenDto) {
     return this.authService.refreshToken(token);

@@ -1,20 +1,3 @@
-// import { Exclude, Expose } from 'class-transformer';
-
-// @Exclude()
-// export class DocumentResponseDto {
-//   @Expose()
-//   id: string;
-
-//   @Expose()
-//   fileKey: string;
-
-//   @Expose()
-//   isPaid: boolean;
-
-//   @Expose()
-//   expiredAt: string | null;
-// }
-
 import { Exclude, Expose, Type } from 'class-transformer';
 
 @Exclude()
@@ -33,15 +16,6 @@ export class UserInfoDto {
 }
 
 @Exclude()
-export class DocumentTypeDto {
-  @Expose()
-  name: string;
-
-  @Expose()
-  description: string;
-}
-
-@Exclude()
 export class DocumentResponseDto {
   @Expose()
   id: string;
@@ -56,10 +30,12 @@ export class DocumentResponseDto {
   expiredAt: string | null;
 
   @Expose()
-  @Type(() => UserInfoDto)
-  user?: UserInfoDto;
+  lang: string;
 
   @Expose()
-  @Type(() => DocumentTypeDto)
-  documentType?: DocumentTypeDto;
+  type: string;
+
+  @Expose()
+  @Type(() => UserInfoDto)
+  user?: UserInfoDto;
 }
