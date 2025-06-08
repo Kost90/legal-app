@@ -55,4 +55,25 @@ export class UserService {
 
     return plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true });
   }
+
+  public async verifyUserEmail(email: string): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({
+      where: { email },
+      select: ['id', 'isEmailVerified'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.isEmailVerified) {
+      return { message: 'Email is already verified' };
+    }
+
+    await this.userRepository.update(user.id, {
+      isEmailVerified: true,
+    });
+
+    return { message: 'Email verified successfully' };
+  }
 }
