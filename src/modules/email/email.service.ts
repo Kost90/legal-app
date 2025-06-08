@@ -17,8 +17,9 @@ export class EmailService {
     this.emailFromName = this.configService.get<string>('emailFrom', 'UDocument');
   }
 
+  // TODO: Add lang to path for verification and choose email with needed lang
   async sendVerificationEmail(email: string, token: string): Promise<void> {
-    const verificationLink = `${this.frontendUrl}/verify-email?token=${token}`;
+    const verificationLink = `${this.frontendUrl}/ua/auth/verify-email?token=${token}`;
 
     const emailToSend = {
       verificationLink: verificationLink,
