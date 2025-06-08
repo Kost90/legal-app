@@ -227,7 +227,7 @@ export class AuthService {
         },
       );
 
-      return { message: 'Email verified successfully' };
+      return await this.userService.verifyUserEmail(payload.email);
     } catch (error) {
       if (error instanceof SyntaxError) {
         throw new BadRequestException('Malformed token. Ensure it is correctly formatted.');

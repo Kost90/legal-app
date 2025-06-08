@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Header, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { UserService } from './services/user.service';
 import { ApiKeyAuthGuard } from 'src/common/guards/api-key.guard';
 import { CONTROLLERS } from 'src/common/constants/controllers.enum';
@@ -8,8 +8,8 @@ import { CreatePowerOfAttorneyDto } from '../document/dto/create-power-of-attorn
 import { DocumentService } from '../document/services/document.service';
 import { GetDocumentRequestDto } from '../document/dto/get-documents.dto';
 
-@UseGuards(ApiKeyAuthGuard)
-@UseGuards(JwtAuthGuard)
+// @UseGuards(ApiKeyAuthGuard)
+// @UseGuards(JwtAuthGuard)
 @Controller(CONTROLLERS.USER)
 export class UserController {
   constructor(
@@ -17,45 +17,60 @@ export class UserController {
     private readonly documentService: DocumentService,
   ) {}
 
-  @Get('me')
-  getUserInformation(@getUserDecorator() user: { id: string; email: string }) {
+  @UseGuards(JwtAuthGuard)
+  @Get('user')
+  getUser(@getUserDecorator() user: { id: string; email: string }) {
     return this.userService.getUserInformation(user.id);
   }
 
-  @Post('create-power-of-attorney')
+  @UseGuards(ApiKeyAuthGuard)
+  @Get('me/:userId')
+  getUserInformation(@Param('userId', new ParseUUIDPipe()) userId: string) {
+    return this.userService.getUserInformation(userId);
+  }
+
+  @UseGuards(ApiKeyAuthGuard)
+  @Post('create-power-of-attorney/:userId')
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'inline; filename=generatedPowerOfAttorney.pdf')
   // TODO: поменять на только свой домен
   @Header('Content-Security-Policy', 'frame-ancestors *')
   async createPowerOfAttorney(
-    @getUserDecorator() user: { id: string; email: string },
+    @Param('userId', new ParseUUIDPipe()) userId: string,
     @Body() body: CreatePowerOfAttorneyDto,
   ) {
-    return this.documentService.createPowerOfAttorneyDocument(body, user.id);
+    return this.documentService.createPowerOfAttorneyDocument(body, userId);
   }
 
-  @Get('user-documents')
-  getUserDocuments(@getUserDecorator() user: { id: string; email: string }, @Query() query: GetDocumentRequestDto) {
-    return this.documentService.getUserDocumentsByType(user.id, query.documentType, query.documentLang);
+  @UseGuards(ApiKeyAuthGuard)
+  @Get('user-documents/:userId')
+  getUserDocuments(@Param('userId', new ParseUUIDPipe()) userId: string, @Query() query: GetDocumentRequestDto) {
+    return this.documentService.getUserDocumentsByType(userId, query.documentType, query.documentLang);
   }
 
-  @Get('download-user-document/:documentId')
+  @UseGuards(ApiKeyAuthGuard)
+  @Get('download-user-document/user/:userId/document/:documentId')
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'inline; filename=generatedPowerOfAttorney.pdf')
   // TODO: поменять на только свой домен
   @Header('Content-Security-Policy', 'frame-ancestors *')
   async downloadDocument(
-    @getUserDecorator() user: { id: string; email: string },
+    @Param('userId', new ParseUUIDPipe()) userId: string,
     @Param('documentId') documentId: string,
   ) {
-    return this.documentService.downloadUserDocument(documentId, user.id);
+    return this.documentService.downloadUserDocument(documentId, userId);
   }
 
-  @Get('download-user-presigned-document/:documentId')
-  async downloadDocumentPresigned(@Param('documentId') documentId: string, @getUserDecorator() user: { id: string }) {
-    return await this.documentService.getDocumentPresignedUrl(documentId, user.id);
+  @UseGuards(ApiKeyAuthGuard)
+  @Get('download-user-presigned-document/user/:userId/document/:documentId')
+  async downloadDocumentPresigned(
+    @Param('documentId') documentId: string,
+    @Param('userId', new ParseUUIDPipe()) userId: string,
+  ) {
+    return await this.documentService.getDocumentPresignedUrl(documentId, userId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete('delete-document/:documentId')
   async deleteDocument(@Param('documentId') documentId: string, @getUserDecorator() user: { id: string }) {
     return await this.documentService.removeDocument(documentId, user.id);

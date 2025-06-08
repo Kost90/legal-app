@@ -5,7 +5,6 @@ import { SignInDto } from './dto/sign-in.dto';
 import { RefreshTokenDto, VerifyEmailDto, VerifyTokenDto } from './dto/tokens.dto';
 import { ApiKeyAuthGuard } from 'src/common/guards/api-key.guard';
 
-@UseGuards(ApiKeyAuthGuard)
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -25,6 +24,7 @@ export class AuthController {
     return this.authService.logout(refreshToken);
   }
 
+  @UseGuards(ApiKeyAuthGuard)
   @Post('refresh-token')
   refreshToken(@Body() { token }: RefreshTokenDto) {
     return this.authService.refreshToken(token);
