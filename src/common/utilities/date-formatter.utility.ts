@@ -26,3 +26,14 @@ export function formatDateByLang(dateStr: string, lang: DOCUMENT_LANG): string {
 
   return formatter.format(date);
 }
+
+export function parseDotDate(dateStr: string): string | null {
+  const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(dateStr);
+  if (!match) return null;
+
+  const [, day, month, year] = match;
+  const isoDate = `${year}-${month}-${day}`;
+  const date = new Date(isoDate);
+
+  return isNaN(date.getTime()) ? null : date.toISOString();
+}

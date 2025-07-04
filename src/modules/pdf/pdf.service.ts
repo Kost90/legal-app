@@ -19,7 +19,7 @@ export class PdfService {
     templateName: string,
     data: PowerOfAttorneyDetailsDto,
     documentLang: DOCUMENT_LANG,
-  ): Promise<Buffer> {
+  ): Promise<{ buffer: Buffer; html: string }> {
     const [html, page] = await Promise.all([
       this.templateService.renderPropertyPowerAttorneyTemplate(templateName, data, documentLang),
       this.puppeteerService.getNewPage(),
@@ -33,8 +33,7 @@ export class PdfService {
         printBackground: this.configService.get('printBackground'),
         margin: this.configService.get('margin'),
       });
-
-      return Buffer.from(buffer);
+      return { buffer: Buffer.from(buffer), html: html };
     } finally {
       await page.close();
     }

@@ -8,6 +8,7 @@ import { CreatePowerOfAttorneyDto } from '../document/dto/create-power-of-attorn
 import { DocumentService } from '../document/services/document.service';
 import { GetDocumentRequestDto } from '../document/dto/get-documents.dto';
 
+// TODO: Think about normalize endpoint
 // @UseGuards(ApiKeyAuthGuard)
 // @UseGuards(JwtAuthGuard)
 @Controller(CONTROLLERS.USER)
@@ -29,12 +30,9 @@ export class UserController {
     return this.userService.getUserInformation(userId);
   }
 
-  @UseGuards(ApiKeyAuthGuard)
+  // @UseGuards(ApiKeyAuthGuard)
   @Post('create-power-of-attorney/:userId')
-  @Header('Content-Type', 'application/pdf')
-  @Header('Content-Disposition', 'inline; filename=generatedPowerOfAttorney.pdf')
-  // TODO: поменять на только свой домен
-  @Header('Content-Security-Policy', 'frame-ancestors *')
+  @Header('Content-Type', 'application/json')
   async createPowerOfAttorney(
     @Param('userId', new ParseUUIDPipe()) userId: string,
     @Body() body: CreatePowerOfAttorneyDto,

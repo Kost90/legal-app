@@ -1,16 +1,8 @@
-import {
-  IsNotEmpty,
-  IsString,
-  IsEnum,
-  ValidateNested,
-  IsOptional,
-  IsDateString,
-  IsEmail,
-  IsBoolean,
-} from 'class-validator';
+import { IsNotEmpty, IsString, IsEnum, ValidateNested, IsOptional, IsEmail, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 import { DOCUMENT_LANG, DOCUMENT_TYPE } from 'src/common/constants/documents-type.enum';
+import { TransformDotDate } from 'src/common/transformers/transformStringToDate';
 
 export class PropertyAddres {
   @IsString()
@@ -38,6 +30,7 @@ export class PowerOfAttorneyDetailsDto {
 
   @IsNotEmpty()
   @IsString()
+  @TransformDotDate()
   birthDate: string;
 
   @IsNotEmpty()
@@ -53,7 +46,8 @@ export class PowerOfAttorneyDetailsDto {
   passport: string;
 
   @IsNotEmpty()
-  @IsDateString()
+  @IsString()
+  @TransformDotDate()
   passportIssueDate: string;
 
   @IsNotEmpty()
@@ -62,6 +56,7 @@ export class PowerOfAttorneyDetailsDto {
 
   @IsNotEmpty()
   @IsString()
+  @TransformDotDate()
   representativeBirthDate: string;
 
   @IsNotEmpty()
@@ -82,11 +77,13 @@ export class PowerOfAttorneyDetailsDto {
   city: string;
 
   @IsNotEmpty()
-  @IsDateString()
+  @IsString()
+  @TransformDotDate()
   date: string;
 
   @IsNotEmpty()
-  @IsDateString()
+  @IsString()
+  @TransformDotDate()
   validUntil: string;
 }
 

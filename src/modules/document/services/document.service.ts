@@ -35,7 +35,10 @@ export class DocumentService {
     private readonly userService: UserService,
   ) {}
 
-  public async createPowerOfAttorneyDocument(body: CreatePowerOfAttorneyDto, userId?: string): Promise<StreamableFile> {
+  public async createPowerOfAttorneyDocument(
+    body: CreatePowerOfAttorneyDto,
+    userId?: string,
+  ): Promise<{ html: string; url: string }> {
     const { isPaid, email } = body;
     const canGenerateFree = await this.canGenerateDocumentForFree(email, isPaid);
 
@@ -47,9 +50,12 @@ export class DocumentService {
     }
 
     const templateName = `${body.documentType}.${body.documentLang}`;
-    const pdf = await this.pdfService.generatePwoerOfAttorneyPropertyPdf(templateName, body.details, body.documentLang);
-
-    if (!pdf) {
+    const { buffer: pdf, html } = await this.pdfService.generatePwoerOfAttorneyPropertyPdf(
+      templateName,
+      body.details,
+      body.documentLang,
+    );
+    if (!pdf || !html) {
       this.logger.error(`Failed to create pdf ${templateName} for email ${email}`);
       throw new BadRequestException(`Failed to create pdf.`);
     }
@@ -74,14 +80,14 @@ export class DocumentService {
     });
 
     const [document] = await Promise.all([this.documentRepository.save(newDocument), this.recordFreeGeneration(email)]);
-
+    // TODO: need to send presined url
     if (!document) {
       this.logger.error(`Failed to save document to the db ${fileKey}`);
       throw new BadRequestException(`Failed to save document.`);
     }
-
+    const { data } = await this.getDocumentPresignedUrl(document.id, userId);
     this.logger.log(`Document ${fileKey} created succsessfully`);
-    return new StreamableFile(pdf);
+    return { html: html, url: data };
   }
 
   private async canGenerateDocumentForFree(email: string, isPaid: boolean): Promise<boolean> {
