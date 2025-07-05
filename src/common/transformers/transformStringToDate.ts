@@ -1,10 +1,25 @@
 import { Transform } from 'class-transformer';
-import { parseDotDate } from '../utilities/date-formatter.utility';
 
 export function TransformDotDate() {
   return Transform(({ value }) => {
-    const iso = parseDotDate(value);
-    if (!iso) throw new Error(`Invalid date format: ${value}`);
-    return iso;
+    if (typeof value !== 'string') {
+      return;
+    }
+
+    const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(value);
+    if (!match) {
+      return new Date('invalid');
+    }
+
+    const [, day, month, year] = match;
+
+    const isoDateStr = `${year}-${month}-${day}`;
+    const date = new Date(isoDateStr);
+
+    if (isNaN(date.getTime())) {
+      return new Date('invalid');
+    }
+
+    return date;
   });
 }

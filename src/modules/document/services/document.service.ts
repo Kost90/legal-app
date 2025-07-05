@@ -19,7 +19,9 @@ import { DocumentGenerationLog } from '../entities/document-generation.entity';
 import { UserService } from 'src/modules/user/services/user.service';
 import { DocumentResponseDto } from '../dto/document-response.dto';
 import { plainToInstance } from 'class-transformer';
-import { SuccessResponseDTO } from 'src/common/dto/succsess-response.dto';
+import { ApiPaginatedResponseDTO, SuccessResponseDTO } from 'src/common/dto/succsess-response.dto';
+import { PaginationQueryParams, SortQueryParams } from 'src/common/validations/pagination-query.dto';
+import { SortType } from 'src/common/constants/pagination-enum';
 
 @Injectable()
 export class DocumentService {
@@ -80,7 +82,7 @@ export class DocumentService {
     });
 
     const [document] = await Promise.all([this.documentRepository.save(newDocument), this.recordFreeGeneration(email)]);
-    // TODO: need to send presined url
+
     if (!document) {
       this.logger.error(`Failed to save document to the db ${fileKey}`);
       throw new BadRequestException(`Failed to save document.`);
@@ -122,27 +124,49 @@ export class DocumentService {
     userId: string,
     documentType: string,
     documentLang?: string,
-  ): Promise<SuccessResponseDTO<DocumentResponseDto[]>> {
+    paginationParams?: PaginationQueryParams,
+    sortQueryParams?: SortQueryParams,
+  ): Promise<ApiPaginatedResponseDTO<DocumentResponseDto>> {
+    const page = paginationParams.page ?? 1;
+    const limit = paginationParams.limit ?? 20;
+    const skip = (page - 1) * limit;
+    const sortType = sortQueryParams.sortType ?? 'DESC';
+
     const queryBuilder = this.documentRepository
       .createQueryBuilder('document')
       .leftJoin('document.user', 'user')
-      .where('user.id = :userId', { userId })
-      .andWhere('document.type = :documentType', { documentType });
+      .where('user.id = :userId', { userId });
+
+    if (documentType) {
+      queryBuilder.andWhere('document.type = :documentType', { documentType });
+    }
 
     if (documentLang) {
       queryBuilder.andWhere('document.lang = :documentLang', { documentLang });
     }
 
-    const userDocuments = await queryBuilder.getMany();
+    if (sortType) {
+      queryBuilder.orderBy('document.createdAt', sortType as SortType);
+    }
 
-    if (!userDocuments.length) {
+    const [items, totalResult] = await queryBuilder.skip(skip).take(limit).getManyAndCount();
+    const totalPages = Math.ceil(totalResult / limit);
+
+    if (!items.length) {
       throw new NotFoundException('User documents not found');
     }
 
     return {
-      data: plainToInstance(DocumentResponseDto, userDocuments, {
-        excludeExtraneousValues: true,
-      }),
+      data: {
+        items: plainToInstance(DocumentResponseDto, items, {
+          excludeExtraneousValues: true,
+        }),
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalResult,
+        },
+      },
       message: 'User documents fetched succsessfully',
       statusCode: HttpStatus.OK,
     };

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsEnum, ValidateNested, IsOptional, IsEmail, IsBoolean } from 'class-validator';
+import { IsNotEmpty, IsString, IsEnum, ValidateNested, IsOptional, IsEmail, IsBoolean, IsDate } from 'class-validator';
 import { Type } from 'class-transformer';
 
 import { DOCUMENT_LANG, DOCUMENT_TYPE } from 'src/common/constants/documents-type.enum';
@@ -29,9 +29,9 @@ export class PowerOfAttorneyDetailsDto {
   fullName: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsDate()
   @TransformDotDate()
-  birthDate: string;
+  birthDate: Date;
 
   @IsNotEmpty()
   @IsString()
@@ -46,18 +46,18 @@ export class PowerOfAttorneyDetailsDto {
   passport: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsDate()
   @TransformDotDate()
-  passportIssueDate: string;
+  passportIssueDate: Date;
 
   @IsNotEmpty()
   @IsString()
   representativeName: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsDate()
   @TransformDotDate()
-  representativeBirthDate: string;
+  representativeBirthDate: Date;
 
   @IsNotEmpty()
   @IsString()
@@ -77,14 +77,14 @@ export class PowerOfAttorneyDetailsDto {
   city: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsDate()
   @TransformDotDate()
-  date: string;
+  date: Date;
 
   @IsNotEmpty()
-  @IsString()
+  @IsDate()
   @TransformDotDate()
-  validUntil: string;
+  validUntil: Date;
 }
 
 export class CreatePowerOfAttorneyDto {
@@ -103,6 +103,7 @@ export class CreatePowerOfAttorneyDto {
   @IsNotEmpty()
   documentLang: DOCUMENT_LANG;
 
+  // TODO: Think how to choose correct dto
   @ValidateNested()
   @Type(() => PowerOfAttorneyDetailsDto)
   @IsNotEmpty()

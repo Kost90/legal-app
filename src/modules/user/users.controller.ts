@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, Header, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Header,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  UseGuards,
+  ValidationPipe,
+} from '@nestjs/common';
 import { UserService } from './services/user.service';
 import { ApiKeyAuthGuard } from 'src/common/guards/api-key.guard';
 import { CONTROLLERS } from 'src/common/constants/controllers.enum';
@@ -18,8 +30,9 @@ export class UserController {
     private readonly documentService: DocumentService,
   ) {}
 
+  @UseGuards(ApiKeyAuthGuard)
   @UseGuards(JwtAuthGuard)
-  @Get('user')
+  @Get()
   getUser(@getUserDecorator() user: { id: string; email: string }) {
     return this.userService.getUserInformation(user.id);
   }
@@ -30,20 +43,33 @@ export class UserController {
     return this.userService.getUserInformation(userId);
   }
 
-  // @UseGuards(ApiKeyAuthGuard)
+  @UseGuards(ApiKeyAuthGuard)
   @Post('create-power-of-attorney/:userId')
   @Header('Content-Type', 'application/json')
-  async createPowerOfAttorney(
-    @Param('userId', new ParseUUIDPipe()) userId: string,
-    @Body() body: CreatePowerOfAttorneyDto,
-  ) {
+  // TODO: Think how to choose correct dto by document type
+  async createDocument(@Param('userId', new ParseUUIDPipe()) userId: string, @Body() body: CreatePowerOfAttorneyDto) {
     return this.documentService.createPowerOfAttorneyDocument(body, userId);
   }
 
   @UseGuards(ApiKeyAuthGuard)
   @Get('user-documents/:userId')
-  getUserDocuments(@Param('userId', new ParseUUIDPipe()) userId: string, @Query() query: GetDocumentRequestDto) {
-    return this.documentService.getUserDocumentsByType(userId, query.documentType, query.documentLang);
+  getUserDocuments(
+    @Param('userId', new ParseUUIDPipe()) userId: string,
+    @Query(new ValidationPipe({ transform: true })) query: GetDocumentRequestDto,
+  ) {
+    return this.documentService.getUserDocumentsByType(
+      userId,
+      query?.documentType,
+      query?.documentLang,
+      {
+        page: query?.page,
+        limit: query?.limit,
+      },
+      {
+        sortKey: query?.sortKey,
+        sortType: query?.sortType,
+      },
+    );
   }
 
   @UseGuards(ApiKeyAuthGuard)

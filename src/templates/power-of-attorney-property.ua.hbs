@@ -5,28 +5,26 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <style>
       body {
-        background-color: #f0f0f0; /* Сірий фон, щоб "аркуш" було видно */
+        background-color: #f0f0f0; 
         color: #000;
-        font-family: 'Times New Roman', Times, serif; /* Класичний шрифт для документів */
+        font-family: 'Times New Roman', Times, serif; 
         font-size: 14px;
         line-height: 1.6;
         margin: 0;
         padding: 0;
 
-        /* ЗАХИСТ ВІД КОПІЮВАННЯ ТЕКСТУ */
-        -webkit-user-select: none; /* Safari */
-        -moz-user-select: none; /* Firefox */
-        -ms-user-select: none; /* IE10+/Edge */
-        user-select: none; /* Standard */
+        -webkit-user-select: none; 
+        -moz-user-select: none; 
+        -ms-user-select: none; 
+        user-select: none; 
       }
 
-      /* СТИЛІЗАЦІЯ ПІД АРКУШ A4 */
       .page {
         background: white;
-        width: 21cm; /* Ширина A4 */
-        min-height: 29.7cm; /* Висота A4 */
-        padding: 2cm; /* Поля документу */
-        margin: 1cm auto; /* Центрування аркуша */
+        width: 21cm;
+        min-height: 29.7cm; 
+        padding: 2cm; 
+        margin: 1cm auto; 
         border: 1px solid #d3d3d3;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
         box-sizing: border-box;
@@ -43,16 +41,15 @@
         text-align: justify;
       }
       
-      /* АДАПТАЦІЯ ДЛЯ МОБІЛЬНИХ ПРИСТРОЇВ */
       @media (max-width: 768px) {
         body {
-          background-color: white; /* На мобілках фон не потрібен */
+          background-color: white; 
         }
         .page {
-          width: 100%; /* На всю ширину екрана */
+          width: 100%; 
           min-height: auto;
           margin: 0;
-          padding: 20px; /* Менші поля */
+          padding: 20px; 
           border: none;
           box-shadow: none;
         }
