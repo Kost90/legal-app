@@ -32,7 +32,7 @@ export class UserService {
   }
 
   public async getUserInformation(userId: string): Promise<SuccessResponseDTO<UserResponseDto>> {
-    const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['documents'] });
+    const user = await this.userRepository.findOne({ where: { id: userId } });
 
     if (!user) {
       throw new NotFoundException('User not found');

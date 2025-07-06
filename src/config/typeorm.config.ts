@@ -15,7 +15,7 @@ const config = {
   migrations: ['dist/migrations/*{.ts,.js}'],
   autoLoadEntities: true,
   // TODO: only for dev, for prod change synchronize to false
-  synchronize: true,
+  synchronize: false,
   ssl: false,
 };
 
