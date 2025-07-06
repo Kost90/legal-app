@@ -123,15 +123,15 @@ export class DocumentService {
 
   public async getUserDocumentsByType(
     userId: string,
-    documentType: string,
+    documentType?: string,
     documentLang?: string,
     paginationParams?: PaginationQueryParams,
     sortQueryParams?: SortQueryParams,
   ): Promise<ApiPaginatedResponseDTO<DocumentResponseDto>> {
-    const page = paginationParams.page ?? 1;
-    const limit = paginationParams.limit ?? 20;
+    const page = paginationParams?.page ?? 1;
+    const limit = paginationParams?.limit ?? 20;
     const skip = (page - 1) * limit;
-    const sortType = sortQueryParams.sortType ?? 'DESC';
+    const sortType = sortQueryParams?.sortType ?? 'DESC';
 
     const queryBuilder = this.documentRepository
       .createQueryBuilder('document')
@@ -226,7 +226,10 @@ export class DocumentService {
     return { data: url, message: 'Presigned url fetched succsessfulle', statusCode: HttpStatus.OK };
   }
 
-  public async removeDocument(documentId: string, userId: string): Promise<SuccessResponseDTO<string>> {
+  public async removeDocument(
+    documentId: string,
+    userId: string,
+  ): Promise<ApiPaginatedResponseDTO<DocumentResponseDto>> {
     const user = await this.userService.findUserById(userId);
     if (!user) {
       throw new NotFoundException(`User with Id: ${userId} not found`);
@@ -248,8 +251,15 @@ export class DocumentService {
     try {
       await Promise.all([this.storageService.deleteFile(document.fileKey), this.documentRepository.delete(documentId)]);
       this.logger.log(`User ${user.id} deleted document ${documentId}`);
+
+      const updatedDocuments = await this.getUserDocumentsByType(user.id);
+
+      if (!updatedDocuments.data.items.length) {
+        throw new NotFoundException('User documents not found');
+      }
+
       return {
-        data: 'document deleted succsessfully',
+        ...updatedDocuments,
         message: 'document deleted succsessfully',
         statusCode: HttpStatus.OK,
       };
