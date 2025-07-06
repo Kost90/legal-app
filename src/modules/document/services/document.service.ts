@@ -22,6 +22,7 @@ import { plainToInstance } from 'class-transformer';
 import { ApiPaginatedResponseDTO, SuccessResponseDTO } from 'src/common/dto/succsess-response.dto';
 import { PaginationQueryParams, SortQueryParams } from 'src/common/validations/pagination-query.dto';
 import { SortType } from 'src/common/constants/pagination-enum';
+import { formatPostgresDate } from 'src/common/utilities/date-formatter.utility';
 
 @Injectable()
 export class DocumentService {
@@ -156,9 +157,16 @@ export class DocumentService {
       throw new NotFoundException('User documents not found');
     }
 
+    const itemsUpdated = items.map((item) => {
+      return {
+        ...item,
+        createdAt: formatPostgresDate(item.createdAt),
+      };
+    });
+
     return {
       data: {
-        items: plainToInstance(DocumentResponseDto, items, {
+        items: plainToInstance(DocumentResponseDto, itemsUpdated, {
           excludeExtraneousValues: true,
         }),
         pagination: {

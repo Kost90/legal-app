@@ -21,3 +21,20 @@ export function formatDateByLang(date: Date, lang: DOCUMENT_LANG): string {
   const formatter = new Intl.DateTimeFormat('en-US', options);
   return formatter.format(date);
 }
+
+export function formatPostgresDate(createdAt: string | Date): string {
+  const date = new Date(createdAt);
+
+  if (isNaN(date.getTime())) {
+    return 'Invalid date';
+  }
+
+  const day = date.getDate();
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+
+  const formattedDay = String(day).padStart(2, '0');
+  const formattedMonth = String(month).padStart(2, '0');
+
+  return `${formattedDay}.${formattedMonth}.${year}`;
+}
