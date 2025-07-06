@@ -52,6 +52,8 @@ export class TemplateService {
 
     const updatedData: IPowerOfAttorneyPropert = {
       ...data,
+      birthDate: formatDateByLang(data.birthDate, documentLang),
+      representativeBirthDate: formatDateByLang(data.representativeBirthDate, documentLang),
       date: formatDateByLang(data.date, documentLang),
       passportIssueDate: formatDateByLang(data.passportIssueDate, documentLang),
       validUntil: formatDateByLang(data.validUntil, documentLang),

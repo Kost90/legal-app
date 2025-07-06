@@ -36,6 +36,9 @@ export class DocumentResponseDto {
   type: string;
 
   @Expose()
+  createdAt: string;
+
+  @Expose()
   @Type(() => UserInfoDto)
   user?: UserInfoDto;
 }
