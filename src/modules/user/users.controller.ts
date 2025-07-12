@@ -45,7 +45,7 @@ export class UserController {
   }
 
   @UseGuards(ApiKeyAuthGuard)
-  @Post('create-power-of-attorney/:userId')
+  @Post('generate-document/:userId')
   @Header('Content-Type', 'application/json')
   async createDocument(
     @Param('userId', new ParseUUIDPipe()) userId: string,
