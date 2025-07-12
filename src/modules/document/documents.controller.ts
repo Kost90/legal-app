@@ -17,6 +17,6 @@ export class DocumentsController {
   // TODO: поменять на только свой домен
   @Header('Content-Security-Policy', 'frame-ancestors *')
   async createPowerOfAttorney(@Body(DocumentDiscriminatorPipe) body: CreateDocumentDto) {
-    return this.documentService.createPowerOfAttorneyDocument(body);
+    return this.documentService.createDocument(body);
   }
 }
