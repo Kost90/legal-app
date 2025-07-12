@@ -13,7 +13,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { Document } from '../entities/document.entity';
 import { Repository } from 'typeorm';
 import { PdfService } from 'src/modules/pdf/pdf.service';
-import { CreatePowerOfAttorneyDto } from '../dto/create-power-of-attorney.dto';
 import { StorageService } from 'src/modules/storage/storage.service';
 import { DocumentGenerationLog } from '../entities/document-generation.entity';
 import { UserService } from 'src/modules/user/services/user.service';
@@ -23,6 +22,7 @@ import { ApiPaginatedResponseDTO, SuccessResponseDTO } from 'src/common/dto/succ
 import { PaginationQueryParams, SortQueryParams } from 'src/common/validations/pagination-query.dto';
 import { SortType } from 'src/common/constants/pagination-enum';
 import { formatPostgresDate } from 'src/common/utilities/date-formatter.utility';
+import { CreateDocumentDto } from '../dto/create-document.dto';
 
 @Injectable()
 export class DocumentService {
@@ -38,10 +38,7 @@ export class DocumentService {
     private readonly userService: UserService,
   ) {}
 
-  public async createPowerOfAttorneyDocument(
-    body: CreatePowerOfAttorneyDto,
-    userId?: string,
-  ): Promise<{ html: string; url: string }> {
+  public async createDocument(body: CreateDocumentDto, userId?: string): Promise<{ html: string; url: string }> {
     const { isPaid, email } = body;
     const canGenerateFree = await this.canGenerateDocumentForFree(email, isPaid);
 
@@ -53,7 +50,7 @@ export class DocumentService {
     }
 
     const templateName = `${body.documentType}.${body.documentLang}`;
-    const { buffer: pdf, html } = await this.pdfService.generatePwoerOfAttorneyPropertyPdf(
+    const { buffer: pdf, html } = await this.pdfService.generateDocumentPdf(
       templateName,
       body.details,
       body.documentLang,

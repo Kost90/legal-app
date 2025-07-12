@@ -2,83 +2,138 @@
   <head>
     <meta charset='UTF-8' />
     <title>Power of Attorney</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <style>
       body {
-        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        color: #000;
+        font-family: 'Times New Roman', Times, serif;
         font-size: 14px;
         line-height: 1.6;
-        padding: 40px;
-        color: #000;
+        margin: 0;
+        padding: 0;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
       }
+
+      .page {
+        background: white;
+        width: 21cm;
+        min-height: 29.7cm;
+        padding: 2cm;
+        margin: 1cm auto;
+        border: 1px solid #d3d3d3;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+        box-sizing: border-box;
+      }
+
       h1 {
         text-align: center;
         text-transform: uppercase;
         margin-bottom: 30px;
+        font-weight: bold;
       }
+
       .section {
         margin-bottom: 20px;
+        text-align: justify;
+      }
+
+      .signature-section {
+        margin-top: 40px;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          background-color: white;
+        }
+        .page {
+          width: 100%;
+          min-height: auto;
+          margin: 0;
+          padding: 20px;
+          border: none;
+          box-shadow: none;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>POWER OF ATTORNEY</h1>
+    <div class='page'>
+      <h1>Power of Attorney</h1>
 
-    <div class='section'>
-      {{city}},
-      {{date}},
-    </div>
+      <div class='section' style='text-align: left;'>
+        City of
+        {{city}},
+        {{fullDateString}}.
+      </div>
 
-    <div class='section'>
-      I,
-      {{fullName}}, born on
-      {{birthDate}}, Tax Identification Number:
-      {{tin}}, residing at
-      {{address}}, passport:
-      {{passport}}, issued on
-      {{passportIssueDate}}, being fully aware of the meaning of my actions and acting voluntarily, based on a prior
-      agreement, hereby authorize
-      {{representativeName}}, born on
-      {{representativeBirthDate}}, Tax Identification Number:
-      {{representativeTIN}}, residing at
-      {{representativeAddress}},
-    </div>
+      <div class='section'>
+        I, a citizen of Ukraine,
+        <strong>{{fullName}}</strong>, born on
+        {{birthDate}}, taxpayer registration card number
+        {{taxId}}, place of residence registered at:
+        {{address}}, passport No.
+        {{passportNumber}}, issued by
+        {{passportIssueAuthority}}
+        on
+        {{passportIssueDate}}, being fully aware of the meaning of my actions and in accordance with my free will, which
+        fully corresponds to my inner intentions, do hereby authorize
+        <strong>{{representativeName}}</strong>, born on
+        {{representativeBirthDate}}, place of residence registered at:
+        {{representativeAddress}},
+      </div>
 
-    <div class='section'>
-      TO BE MY REPRESENTATIVE AND ACT ON MY BEHALF before third parties in all relevant enterprises, institutions, and
-      organizations, regardless of their jurisdiction, in particular in
-      {{authoritiesList}}
-      — with all necessary powers to resolve matters related to the privatization and registration of ownership rights
-      to the apartment located at:
-      {{propertyAddress}}, to obtain the necessary documents and their duplicates, and to further DISPOSE of the
-      aforementioned property (sale, exchange, lease) on terms and at a price at her discretion, with the right to enter
-      into and sign on my behalf sales agreements, lease agreements, preliminary agreements, agreements for amendments
-      and/or supplements to the aforementioned agreements, termination agreements, and so on.
-    </div>
+      <div class='section'>
+        TO BE MY REPRESENTATIVE in any
+        {{authoritiesList}}, etc., regarding the
+        <strong>SALE</strong>
+        of the real estate property located in Ukraine at the address:
+        <strong>{{propertyAddress}}</strong>, at a price and on terms at his/her own discretion, with the right to
+        conclude and sign on my behalf purchase and sale agreements, and if necessary - preliminary agreements, deposit
+        agreements, advance payment agreements, agreements on settlements under previously concluded agreements,
+        agreements on introducing any amendments and/or additions to the aforementioned agreements, and agreements on
+        the termination of the aforementioned agreements.
+      </div>
 
-    <div class='section'>
-      For this purpose, I authorize her to submit and receive on my behalf all necessary certificates, documents,
-      applications, technical documentation, reports, extracts, copies, permits, registration and ownership documents,
-      including ownership certificates for real estate, extracts/information from the State Register of Property Rights
-      to Real Estate regarding the registration of ownership rights; to submit applications on my behalf to the relevant
-      authorities and institutions, including applications for issuance of duplicate documents, registration of property
-      rights and encumbrances, statements about marital status and/or personal ownership rights, error corrections; to
-      receive any necessary documents, including ownership documents and their duplicates, ownership certificates (or
-      their duplicates), information certificates and/or extracts from the State Register of Property Rights to Real
-      Estate; to sign documents and receive them on my behalf, to enter into and sign preliminary agreements, sales
-      contracts, agreements on amendments and/or supplements to said contracts, lease agreements, termination
-      agreements, etc.; to open and close accounts on my behalf in any banking institutions, to make non-cash
-      settlements, receive funds due to me, pay document processing fees, administrative fees, state duties, taxes, and
-      other necessary payments, and to perform all other actions related to this Power of Attorney.
-    </div>
+      <div class='section'>
+        For this purpose, I grant him/her the right to conduct negotiations, represent interests with all necessary
+        powers in the relevant bodies, coordinate all issues arising in the course of exercising these powers, to be my
+        representative in the relevant institutions and organizations on matters of obtaining the necessary documents
+        related to water supply, electricity, gas, utilities, telephone services, as well as payment for these services,
+        to submit documents and applications on my behalf to the relevant bodies and institutions, including those
+        concerning my ownership of property by right of personal private property and my marital status, for my
+        registration or de-registration (checking out, checking in), to receive necessary certificates and documents,
+        including technical passports for the above-mentioned real estate, title documents, information from the State
+        Register of Real Property Rights, Certificate (from the place of residence on family composition and
+        registration), etc., to open and/or close accounts in any bank in Ukraine, to make non-cash payments, receive
+        money due to me, to sign on my behalf on documents and for their receipt, to conclude and sign on my behalf all
+        necessary civil contracts for maintenance services for the real estate, as well as to conclude and sign on my
+        behalf purchase and sale agreements, preliminary agreements, deposit agreements, advance payment agreements,
+        agreements on settlements under previously concluded agreements, agreements on introducing any amendments and/or
+        additions to the aforementioned agreements, agreements on the termination of the aforementioned agreements; to
+        pay on my behalf due payments: taxes, state duties, administrative fees, and other expenses, as well as to
+        perform all other actions related to this power of attorney.
+      </div>
 
-    <div class='section'>
-      This Power of Attorney is issued without the right of substitution and is valid for THREE YEARS, until
-      {{validUntil}}.
-    </div>
+      <div class='section'>
+        This Power of Attorney is issued for a term of
+        <strong>THREE YEARS</strong>
+        and is valid until
+        {{validUntilDate}}.
+      </div>
 
-    <div class='section'>
-      Signature: ____________________
-      {{fullName}}
+      <div class='section'>
+        I have read this power of attorney, its content is clear to me and corresponds to my will. Signed by me
+        personally.
+      </div>
+
+      <div class='signature-section'>
+        SIGNATURE _________________________________________________________________
+      </div>
+
     </div>
   </body>
 </html>

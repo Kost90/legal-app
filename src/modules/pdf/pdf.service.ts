@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { PDFDocument } from 'pdf-lib';
 
 import { TemplateService } from '../template/template.service';
-import { PowerOfAttorneyDetailsDto } from '../document/dto/create-power-of-attorney.dto';
 import { ConfigService } from '@nestjs/config';
 import { DOCUMENT_LANG } from 'src/common/constants/documents-type.enum';
 import { PuppeteerService } from '../puppeteer/puppeteer.service';
+import { PowerOfAttorneyDetailsDto } from '../document/dto/create-power-of-attorney.dto';
+import { PowerOfAttorneyDocumentsDto } from '../document/dto/create-power-of-attorney-documents.dto';
 
 @Injectable()
 export class PdfService {
@@ -15,13 +16,13 @@ export class PdfService {
     private readonly puppeteerService: PuppeteerService,
   ) {}
 
-  async generatePwoerOfAttorneyPropertyPdf(
+  async generateDocumentPdf(
     templateName: string,
-    data: PowerOfAttorneyDetailsDto,
+    data: PowerOfAttorneyDetailsDto | PowerOfAttorneyDocumentsDto,
     documentLang: DOCUMENT_LANG,
   ): Promise<{ buffer: Buffer; html: string }> {
     const [html, page] = await Promise.all([
-      this.templateService.renderPropertyPowerAttorneyTemplate(templateName, data, documentLang),
+      this.templateService.renderTemplate(templateName, data, documentLang),
       this.puppeteerService.getNewPage(),
     ]);
 
