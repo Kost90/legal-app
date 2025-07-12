@@ -34,7 +34,7 @@ export class PowerOfAttorneyDetailsDto {
 
   @IsNotEmpty()
   @IsString()
-  tin: string;
+  taxId: string;
 
   @IsNotEmpty()
   @IsString()
