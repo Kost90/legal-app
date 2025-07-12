@@ -13,12 +13,13 @@ import { DOCUMENT_LANG, DOCUMENT_TYPE } from 'src/common/constants/documents-typ
 import { cityMap } from './utils/cityMapper';
 import { CITIES } from 'src/common/constants/city.enum';
 import { FormatToString } from 'src/common/utilities/formatToString.utility';
-import { IPowerOfAttorneyPropert } from './types';
+import { IPowerOfAttorneyDocumentsTemplateParams, IPowerOfAttorneyPropertTemplateParams } from './types';
 import { AiService } from '../ai/ai.service';
 import { AiAuthorityListGeneratedEvent } from './dto/authoriti-list-event.dto';
 import { EventService } from '../event/event.service';
 import { messages } from '../event/messages/messages';
 import { formatDateByLang } from 'src/common/utilities/date-formatter.utility';
+import { PowerOfAttorneyDocumentsDto } from '../document/dto/create-power-of-attorney-documents.dto';
 
 @Injectable()
 export class TemplateService {
@@ -32,37 +33,53 @@ export class TemplateService {
     private readonly eventService: EventService,
   ) {}
 
-  public async renderPropertyPowerAttorneyTemplate(
+  public async renderTemplate<T extends DOCUMENT_TYPE>(
     templateName: string,
-    data: PowerOfAttorneyDetailsDto,
+    data: T extends DOCUMENT_TYPE.PAWER_OF_ATTORNEY_PROPERTY ? PowerOfAttorneyDetailsDto : PowerOfAttorneyDocumentsDto,
     documentLang: DOCUMENT_LANG,
   ): Promise<string> {
     const templateStr = this.loadTemplate(templateName);
-    const city = this.normalizeCityName(data.propertyAddress.city);
-    // TODO: Передать сюда тип документа и по типу документа, смотреть нужен ли адрес недвижимости, сделать отдельный метод который будет смотреть, что надо
-    const propertyAddress = FormatToString(data.propertyAddress);
 
-    if (!propertyAddress) {
-      this.logger.error('Failed to create template, property address missed');
-      throw new BadRequestException('Failed to create template, property address missed');
+    let city: string;
+    let propertyAddress: string;
+    let normalizedCity: string;
+    let authorityList: string;
+
+    if (this.isPowerOfAttorneyProperty(data)) {
+      if (data.propertyAddress?.city) {
+        city = this.normalizeCityName(data.propertyAddress.city);
+        normalizedCity = city || data.propertyAddress.city;
+      }
+      propertyAddress = FormatToString(data.propertyAddress);
+      authorityList = await this.findOrGenerateAuthorityList(normalizedCity, documentLang);
+
+      const updatedData: IPowerOfAttorneyPropertTemplateParams = {
+        ...data,
+        birthDate: formatDateByLang(data.birthDate, documentLang),
+        representativeBirthDate: formatDateByLang(data.representativeBirthDate, documentLang),
+        date: formatDateByLang(data.date, documentLang),
+        passportIssueDate: formatDateByLang(data.passportIssueDate, documentLang),
+        validUntil: formatDateByLang(data.validUntil, documentLang),
+        propertyAddress,
+        authoritiesList: authorityList,
+      };
+
+      return Handlebars.compile(templateStr)(updatedData);
     }
 
-    const normalizedCity = city ? city : data.propertyAddress.city;
-    const authorityList = await this.findOrGenerateAuthorityList(normalizedCity, documentLang);
+    if (this.isPowerOfAttorneyDocuments(data)) {
+      const updatedData: IPowerOfAttorneyDocumentsTemplateParams = {
+        ...data,
+        birthDate: formatDateByLang(data.birthDate, documentLang),
+        representativeBirthDate: formatDateByLang(data.representativeBirthDate, documentLang),
+        date: formatDateByLang(data.date, documentLang),
+        passportIssueDate: formatDateByLang(data.passportIssueDate, documentLang),
+        validUntil: formatDateByLang(data.validUntil, documentLang),
+      };
+      return Handlebars.compile(templateStr)(updatedData);
+    }
 
-    const updatedData: IPowerOfAttorneyPropert = {
-      ...data,
-      birthDate: formatDateByLang(data.birthDate, documentLang),
-      representativeBirthDate: formatDateByLang(data.representativeBirthDate, documentLang),
-      date: formatDateByLang(data.date, documentLang),
-      passportIssueDate: formatDateByLang(data.passportIssueDate, documentLang),
-      validUntil: formatDateByLang(data.validUntil, documentLang),
-      propertyAddress,
-      authoritiesList: authorityList,
-    };
-
-    const template = Handlebars.compile(templateStr);
-    return template(updatedData);
+    throw new NotFoundException('Document type template noy found');
   }
 
   private loadTemplate(templateName: string): string {
@@ -152,5 +169,17 @@ export class TemplateService {
         error,
       );
     }
+  }
+
+  private isPowerOfAttorneyProperty(
+    data: PowerOfAttorneyDetailsDto | PowerOfAttorneyDocumentsDto,
+  ): data is PowerOfAttorneyDetailsDto {
+    return 'propertyAddress' in data;
+  }
+
+  private isPowerOfAttorneyDocuments(
+    data: PowerOfAttorneyDetailsDto | PowerOfAttorneyDocumentsDto,
+  ): data is PowerOfAttorneyDetailsDto {
+    return !('propertyAddress' in data) || data.propertyAddress === undefined || data.propertyAddress === null;
   }
 }

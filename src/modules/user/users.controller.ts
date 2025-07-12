@@ -16,9 +16,10 @@ import { ApiKeyAuthGuard } from 'src/common/guards/api-key.guard';
 import { CONTROLLERS } from 'src/common/constants/controllers.enum';
 import { getUserDecorator } from 'src/common/decorators/get-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CreatePowerOfAttorneyDto } from '../document/dto/create-power-of-attorney.dto';
 import { DocumentService } from '../document/services/document.service';
 import { GetDocumentRequestDto } from '../document/dto/get-documents.dto';
+import { CreateDocumentDto } from '../document/dto/create-document.dto';
+import { DocumentDiscriminatorPipe } from 'src/common/utilities/documents-discriminator-pipe';
 
 // TODO: Think about normalize endpoint
 // @UseGuards(ApiKeyAuthGuard)
@@ -46,9 +47,11 @@ export class UserController {
   @UseGuards(ApiKeyAuthGuard)
   @Post('create-power-of-attorney/:userId')
   @Header('Content-Type', 'application/json')
-  // TODO: Think how to choose correct dto by document type
-  async createDocument(@Param('userId', new ParseUUIDPipe()) userId: string, @Body() body: CreatePowerOfAttorneyDto) {
-    return this.documentService.createPowerOfAttorneyDocument(body, userId);
+  async createDocument(
+    @Param('userId', new ParseUUIDPipe()) userId: string,
+    @Body(DocumentDiscriminatorPipe) body: CreateDocumentDto,
+  ) {
+    return this.documentService.createDocument(body, userId);
   }
 
   @UseGuards(ApiKeyAuthGuard)
