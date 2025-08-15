@@ -40,18 +40,15 @@ export class TemplateService {
   ): Promise<string> {
     const templateStr = this.loadTemplate(templateName);
 
-    let city: string;
-    let propertyAddress: string;
-    let normalizedCity: string;
-    let authorityList: string;
-
     if (this.isPowerOfAttorneyProperty(data)) {
+      let city: string;
+      let normalizedCity: string;
       if (data.propertyAddress?.city) {
         city = this.normalizeCityName(data.propertyAddress.city);
         normalizedCity = city || data.propertyAddress.city;
       }
-      propertyAddress = FormatToString(data.propertyAddress);
-      authorityList = await this.findOrGenerateAuthorityList(normalizedCity, documentLang);
+      const propertyAddress = FormatToString(data.propertyAddress);
+      const authorityList = await this.findOrGenerateAuthorityList(normalizedCity, documentLang);
 
       const updatedData: IPowerOfAttorneyPropertTemplateParams = {
         ...data,
