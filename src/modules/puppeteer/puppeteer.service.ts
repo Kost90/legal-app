@@ -10,6 +10,12 @@ export class PuppeteerService implements OnModuleInit, OnModuleDestroy {
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
+
+    // const browser = await puppeteer.launch({
+    //   args: (process.env.PUPPETEER_ARGS || '').split(' ').filter(Boolean),
+    //   executablePath: process.env.PUPPETEER_EXECUTABLE_PATH, // укажет на /usr/bin/chromium
+    //   headless: 'new',
+    // });
   }
 
   async onModuleDestroy() {

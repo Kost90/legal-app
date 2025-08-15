@@ -151,7 +151,7 @@ export class DocumentService {
     const totalPages = Math.ceil(totalResult / limit);
 
     if (!items.length) {
-      throw new NotFoundException('User documents not found');
+      this.logger.warn(`User with id:${userId} documents with type ${documentType} not found`);
     }
 
     const itemsUpdated = items.map((item) => {
