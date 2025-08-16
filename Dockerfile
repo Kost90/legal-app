@@ -1,7 +1,7 @@
 # ---------- 1) deps: ставим ВСЕ зависимости для кэша ----------
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
-# Эта переменная нужна, чтобы npm не пытался скачать Chromium на этом этапе
+# Puppeteer не скачивает Chromium на этом этапе
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 COPY package*.json ./
 RUN npm install
@@ -15,25 +15,28 @@ COPY . .
 RUN npm run build
 
 # ---------- 3) runner: Финальный образ ----------
-# Используем официальный образ Puppeteer, в котором уже есть Chromium
-FROM ghcr.io/puppeteer/puppeteer:latest AS runner
+FROM ghcr.io/puppeteer/puppeteer:latest
+
+# Устанавливаем рабочую директорию
 WORKDIR /app
+
+# Копируем файлы зависимостей
+COPY package*.json ./
+
+# Устанавливаем зависимости от root (важно для прав записи)
 USER root
-# Устанавливаем утилиты, если они нужны
-RUN apt-get update && apt-get install -y --no-install-recommends dumb-init netcat-openbsd \
-    && rm -rf /var/lib/apt/lists/*
+RUN chown -R pptruser:pptruser /app && npm install
 
 ENV NODE_ENV=production
 
-# Копируем package.json и устанавливаем ТОЛЬКО production-зависимости
-# Это ключевое изменение: установка происходит ВНУТРИ правильного образа
+# Копируем package.json и ставим только production-зависимости
 COPY package*.json ./
 RUN npm install --omit=dev
 
-# Копируем собранный код из этапа builder
+# Копируем собранный NestJS код
 COPY --from=builder /app/dist ./dist
 
-# Копируем entrypoint и настраиваем права
+# Копируем entrypoint.sh и настраиваем права
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh && chown -R pptruser:pptruser /app
 
