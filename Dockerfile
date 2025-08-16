@@ -25,9 +25,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends dumb-init netca
     && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV PUPPETEER_ARGS="--no-sandbox --disable-setuid-sandbox --font-render-hinting=none"
 
 COPY --from=prune /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
