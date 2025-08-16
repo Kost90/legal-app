@@ -19,26 +19,29 @@ RUN npm run build
 FROM ghcr.io/puppeteer/puppeteer:latest AS runner
 WORKDIR /app
 USER root
-# Устанавливаем утилиты, если они нужны
-RUN apt-get update && apt-get install -y --no-install-recommends dumb-init netcat-openbsd \
-    && rm -rf /var/lib/apt/lists/*
+
+# Устанавливаем утилиты и Chromium
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends dumb-init netcat-openbsd chromium && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 
-# Копируем package.json и устанавливаем ТОЛЬКО production-зависимости
-# Это ключевое изменение: установка происходит ВНУТРИ правильного образа
+# Копируем package.json и устанавливаем только production-зависимости
 COPY package*.json ./
 RUN npm install --omit=dev
 
-# Копируем собранный код из этапа builder
+# Копируем собранный код из builder
 COPY --from=builder /app/dist ./dist
 
 # Копируем entrypoint и настраиваем права
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh && chown -R pptruser:pptruser /app
 
+# Переключаемся на безопасного пользователя Puppeteer
 USER pptruser
 EXPOSE 3030
 
+# Настройка dumb-init и запуск приложения
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["/app/entrypoint.sh"]
