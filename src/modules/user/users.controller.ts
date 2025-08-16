@@ -1,13 +1,27 @@
-import { Body, Controller, Delete, Get, Header, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Header,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  UseGuards,
+  ValidationPipe,
+} from '@nestjs/common';
 import { UserService } from './services/user.service';
 import { ApiKeyAuthGuard } from 'src/common/guards/api-key.guard';
 import { CONTROLLERS } from 'src/common/constants/controllers.enum';
 import { getUserDecorator } from 'src/common/decorators/get-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CreatePowerOfAttorneyDto } from '../document/dto/create-power-of-attorney.dto';
 import { DocumentService } from '../document/services/document.service';
 import { GetDocumentRequestDto } from '../document/dto/get-documents.dto';
+import { CreateDocumentDto } from '../document/dto/create-document.dto';
+import { DocumentDiscriminatorPipe } from 'src/common/utilities/documents-discriminator-pipe';
 
+// TODO: Think about normalize endpoint
 // @UseGuards(ApiKeyAuthGuard)
 // @UseGuards(JwtAuthGuard)
 @Controller(CONTROLLERS.USER)
@@ -17,8 +31,9 @@ export class UserController {
     private readonly documentService: DocumentService,
   ) {}
 
+  @UseGuards(ApiKeyAuthGuard)
   @UseGuards(JwtAuthGuard)
-  @Get('user')
+  @Get()
   getUser(@getUserDecorator() user: { id: string; email: string }) {
     return this.userService.getUserInformation(user.id);
   }
@@ -30,22 +45,34 @@ export class UserController {
   }
 
   @UseGuards(ApiKeyAuthGuard)
-  @Post('create-power-of-attorney/:userId')
-  @Header('Content-Type', 'application/pdf')
-  @Header('Content-Disposition', 'inline; filename=generatedPowerOfAttorney.pdf')
-  // TODO: поменять на только свой домен
-  @Header('Content-Security-Policy', 'frame-ancestors *')
-  async createPowerOfAttorney(
+  @Post('generate-document/:userId')
+  @Header('Content-Type', 'application/json')
+  async createDocument(
     @Param('userId', new ParseUUIDPipe()) userId: string,
-    @Body() body: CreatePowerOfAttorneyDto,
+    @Body(DocumentDiscriminatorPipe) body: CreateDocumentDto,
   ) {
-    return this.documentService.createPowerOfAttorneyDocument(body, userId);
+    return this.documentService.createDocument(body, userId);
   }
 
   @UseGuards(ApiKeyAuthGuard)
   @Get('user-documents/:userId')
-  getUserDocuments(@Param('userId', new ParseUUIDPipe()) userId: string, @Query() query: GetDocumentRequestDto) {
-    return this.documentService.getUserDocumentsByType(userId, query.documentType, query.documentLang);
+  getUserDocuments(
+    @Param('userId', new ParseUUIDPipe()) userId: string,
+    @Query(new ValidationPipe({ transform: true })) query: GetDocumentRequestDto,
+  ) {
+    return this.documentService.getUserDocumentsByType(
+      userId,
+      query?.documentType,
+      query?.documentLang,
+      {
+        page: query?.page,
+        limit: query?.limit,
+      },
+      {
+        sortKey: query?.sortKey,
+        sortType: query?.sortType,
+      },
+    );
   }
 
   @UseGuards(ApiKeyAuthGuard)

@@ -13,13 +13,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { Document } from '../entities/document.entity';
 import { Repository } from 'typeorm';
 import { PdfService } from 'src/modules/pdf/pdf.service';
-import { CreatePowerOfAttorneyDto } from '../dto/create-power-of-attorney.dto';
 import { StorageService } from 'src/modules/storage/storage.service';
 import { DocumentGenerationLog } from '../entities/document-generation.entity';
 import { UserService } from 'src/modules/user/services/user.service';
 import { DocumentResponseDto } from '../dto/document-response.dto';
 import { plainToInstance } from 'class-transformer';
-import { SuccessResponseDTO } from 'src/common/dto/succsess-response.dto';
+import { ApiPaginatedResponseDTO, SuccessResponseDTO } from 'src/common/dto/succsess-response.dto';
+import { PaginationQueryParams, SortQueryParams } from 'src/common/validations/pagination-query.dto';
+import { SortType } from 'src/common/constants/pagination-enum';
+import { formatPostgresDate } from 'src/common/utilities/date-formatter.utility';
+import { CreateDocumentDto } from '../dto/create-document.dto';
 
 @Injectable()
 export class DocumentService {
@@ -35,7 +38,7 @@ export class DocumentService {
     private readonly userService: UserService,
   ) {}
 
-  public async createPowerOfAttorneyDocument(body: CreatePowerOfAttorneyDto, userId?: string): Promise<StreamableFile> {
+  public async createDocument(body: CreateDocumentDto, userId?: string): Promise<{ html: string; url: string }> {
     const { isPaid, email } = body;
     const canGenerateFree = await this.canGenerateDocumentForFree(email, isPaid);
 
@@ -47,9 +50,12 @@ export class DocumentService {
     }
 
     const templateName = `${body.documentType}.${body.documentLang}`;
-    const pdf = await this.pdfService.generatePwoerOfAttorneyPropertyPdf(templateName, body.details, body.documentLang);
-
-    if (!pdf) {
+    const { buffer: pdf, html } = await this.pdfService.generateDocumentPdf(
+      templateName,
+      body.details,
+      body.documentLang,
+    );
+    if (!pdf || !html) {
       this.logger.error(`Failed to create pdf ${templateName} for email ${email}`);
       throw new BadRequestException(`Failed to create pdf.`);
     }
@@ -79,9 +85,9 @@ export class DocumentService {
       this.logger.error(`Failed to save document to the db ${fileKey}`);
       throw new BadRequestException(`Failed to save document.`);
     }
-
+    const { data } = await this.getDocumentPresignedUrl(document.id, userId);
     this.logger.log(`Document ${fileKey} created succsessfully`);
-    return new StreamableFile(pdf);
+    return { html: html, url: data };
   }
 
   private async canGenerateDocumentForFree(email: string, isPaid: boolean): Promise<boolean> {
@@ -114,29 +120,58 @@ export class DocumentService {
 
   public async getUserDocumentsByType(
     userId: string,
-    documentType: string,
+    documentType?: string,
     documentLang?: string,
-  ): Promise<SuccessResponseDTO<DocumentResponseDto[]>> {
+    paginationParams?: PaginationQueryParams,
+    sortQueryParams?: SortQueryParams,
+  ): Promise<ApiPaginatedResponseDTO<DocumentResponseDto>> {
+    const page = paginationParams?.page ?? 1;
+    const limit = paginationParams?.limit ?? 20;
+    const skip = (page - 1) * limit;
+    const sortType = sortQueryParams?.sortType ?? 'DESC';
+
     const queryBuilder = this.documentRepository
       .createQueryBuilder('document')
       .leftJoin('document.user', 'user')
-      .where('user.id = :userId', { userId })
-      .andWhere('document.type = :documentType', { documentType });
+      .where('user.id = :userId', { userId });
+
+    if (documentType) {
+      queryBuilder.andWhere('document.type = :documentType', { documentType });
+    }
 
     if (documentLang) {
       queryBuilder.andWhere('document.lang = :documentLang', { documentLang });
     }
 
-    const userDocuments = await queryBuilder.getMany();
-
-    if (!userDocuments.length) {
-      throw new NotFoundException('User documents not found');
+    if (sortType) {
+      queryBuilder.orderBy('document.createdAt', sortType as SortType);
     }
 
+    const [items, totalResult] = await queryBuilder.skip(skip).take(limit).getManyAndCount();
+    const totalPages = Math.ceil(totalResult / limit);
+
+    if (!items.length) {
+      this.logger.warn(`User with id:${userId} documents with type ${documentType} not found`);
+    }
+
+    const itemsUpdated = items.map((item) => {
+      return {
+        ...item,
+        createdAt: formatPostgresDate(item.createdAt),
+      };
+    });
+
     return {
-      data: plainToInstance(DocumentResponseDto, userDocuments, {
-        excludeExtraneousValues: true,
-      }),
+      data: {
+        items: plainToInstance(DocumentResponseDto, itemsUpdated, {
+          excludeExtraneousValues: true,
+        }),
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalResult,
+        },
+      },
       message: 'User documents fetched succsessfully',
       statusCode: HttpStatus.OK,
     };
@@ -188,7 +223,10 @@ export class DocumentService {
     return { data: url, message: 'Presigned url fetched succsessfulle', statusCode: HttpStatus.OK };
   }
 
-  public async removeDocument(documentId: string, userId: string): Promise<SuccessResponseDTO<string>> {
+  public async removeDocument(
+    documentId: string,
+    userId: string,
+  ): Promise<ApiPaginatedResponseDTO<DocumentResponseDto>> {
     const user = await this.userService.findUserById(userId);
     if (!user) {
       throw new NotFoundException(`User with Id: ${userId} not found`);
@@ -210,8 +248,15 @@ export class DocumentService {
     try {
       await Promise.all([this.storageService.deleteFile(document.fileKey), this.documentRepository.delete(documentId)]);
       this.logger.log(`User ${user.id} deleted document ${documentId}`);
+
+      const updatedDocuments = await this.getUserDocumentsByType(user.id);
+
+      if (!updatedDocuments.data.items.length) {
+        throw new NotFoundException('User documents not found');
+      }
+
       return {
-        data: 'document deleted succsessfully',
+        ...updatedDocuments,
         message: 'document deleted succsessfully',
         statusCode: HttpStatus.OK,
       };

@@ -1,28 +1,8 @@
-import { IsNotEmpty, IsString, IsOptional, IsDate } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsNotEmpty, IsString, IsDate } from 'class-validator';
 
 import { TransformDotDate } from 'src/common/transformers/transformStringToDate';
 
-export class PropertyAddres {
-  @IsString()
-  city: string;
-
-  @IsString()
-  street: string;
-
-  @IsString()
-  buildNumber: string;
-
-  @IsOptional()
-  @IsString()
-  apartment?: string;
-
-  @IsOptional()
-  @IsString()
-  postCode?: string;
-}
-
-export class PowerOfAttorneyDetailsDto {
+export class PowerOfAttorneyDocumentsDto {
   @IsNotEmpty()
   @IsString()
   fullName: string;
@@ -51,6 +31,10 @@ export class PowerOfAttorneyDetailsDto {
 
   @IsNotEmpty()
   @IsString()
+  passportIssueAuthority: string;
+
+  @IsNotEmpty()
+  @IsString()
   representativeName: string;
 
   @IsNotEmpty()
@@ -65,11 +49,6 @@ export class PowerOfAttorneyDetailsDto {
   @IsNotEmpty()
   @IsString()
   representativeAddress: string;
-
-  @IsOptional()
-  @IsNotEmpty()
-  @Type(() => PropertyAddres)
-  propertyAddress: PropertyAddres;
 
   @IsNotEmpty()
   @IsString()

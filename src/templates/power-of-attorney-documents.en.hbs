@@ -1,0 +1,139 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <title>Power of Attorney</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <style>
+      body {
+        background-color: #f0f0f0;
+        color: #000;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      .page {
+        background: white;
+        width: 21cm;
+        min-height: 29.7cm;
+        padding: 2cm;
+        margin: 1cm auto;
+        border: 1px solid #d3d3d3;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+        box-sizing: border-box;
+      }
+
+      h1 {
+        text-align: center;
+        text-transform: uppercase;
+        margin-bottom: 30px;
+        font-weight: bold;
+      }
+
+      .section {
+        margin-bottom: 20px;
+        text-align: justify;
+      }
+
+      .signature-section {
+        margin-top: 40px;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          background-color: white;
+        }
+        .page {
+          width: 100%;
+          min-height: auto;
+          margin: 0;
+          padding: 20px;
+          border: none;
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class='page'>
+      <h1>Power of Attorney</h1>
+
+      <div class='section' style='text-align: left;'>
+        City of
+        {{city}},
+        {{date}}.
+      </div>
+
+      <div class='section'>
+        I, a citizen of Ukraine,
+        <strong>{{fullName}}</strong>, born on
+        {{birthDate}}, taxpayer registration card number
+        {{taxId}}, place of residence registered at:
+        {{address}}, passport No.
+        {{passportNumber}}, issued by
+        {{passportIssueAuthority}}
+        on
+        {{passportIssueDate}}, being fully aware of the meaning of my actions and in accordance with my free will, which
+        fully corresponds to my inner intentions, do hereby authorize
+        <strong>{{representativeName}}</strong>, born on
+        {{representativeBirthDate}}, place of residence registered at:
+        {{representativeAddress}},
+      </div>
+
+      <div class='section'>
+        TO REPRESENT MY INTERESTS in any enterprises, institutions, and organizations, regardless of their
+        subordination, form of ownership, and industry affiliation, in bodies of executive power and local
+        self-government, in bodies of the state executive service, ministries, agencies, their structural subdivisions,
+        state committees, and their subordinate bodies; in embassies and consulates of foreign states in Ukraine; in
+        notary offices (private or state), in bodies of justice, including - in justice departments of any level, state
+        registration bodies for real property rights, before state registrars of the departments of state registration
+        of legal entities, individual entrepreneurs, and public associations, the Department for the Provision of
+        Administrative Services, in civil status registration bodies, etc.; in any banking institutions of Ukraine; in
+        customs authorities, in any bodies of the migration service, in the bodies of the passport and visa service of
+        Ukraine; in prosecution bodies, in internal affairs bodies, the National Police of Ukraine, the Main and
+        territorial departments of the National Police of Ukraine and its separate subdivisions, patrol police bodies,
+        Territorial Recruitment and Social Support Centers, in other law enforcement agencies of Ukraine; in all
+        departments and directorates of the State Agency of Land Resources of Ukraine, branches of the Center of the
+        State Land Cadastre of Ukraine, the State Cadastral Registrar of the relevant territorial subdivision of the
+        State Geocadastre; in appraisal, expert organizations, address bureaus, in BTI bodies (Bureau of Technical
+        Inventory), in urban planning and architecture bodies; in the State Tax authorities, in territorial and
+        structural subdivisions of the State Fiscal Service of Ukraine, institutions of the Pension Fund of Ukraine, the
+        State Service of Ukraine for Personal Data Protection, statistics bodies, the employment fund, the social
+        insurance fund; in all judicial institutions of any level, including appellate, cassation courts, etc.; in
+        medical institutions; in housing and communal bodies, services: gas, electricity, water supply, heating, etc.;
+        in communication bodies (post offices, telephone companies, etc.) and their branches, before any individuals
+        and/or legal entities on matters of processing and receiving any certificates and documents in my name.
+      </div>
+
+      <div class='section'>
+        For this purpose, I grant the representative the right to coordinate all issues that may arise in the process of
+        exercising the powers granted by this power of attorney, to conduct negotiations, to submit any applications on
+        my behalf, to receive any certificates and documents, to sign for me upon receipt of documents, to make
+        necessary payments for me, and to perform all necessary actions and formalities within the limits and scope
+        provided by current legislation for this type of authorization.
+      </div>
+
+      <div class='section'>
+        This Power of Attorney is issued for a term of
+        <strong>THREE YEARS</strong>
+        and is valid until
+        {{validUntil}}.
+      </div>
+
+      <div class='section'>
+        I have read this power of attorney, its content is clear to me and corresponds to my will. Signed by me
+        personally.
+      </div>
+
+      <div class='signature-section'>
+        SIGNATURE _________________________________________________________________
+      </div>
+    </div>
+  </body>
+</html>
