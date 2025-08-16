@@ -6,14 +6,8 @@ export class PuppeteerService implements OnModuleInit, OnModuleDestroy {
   private browser: puppeteer.Browser;
 
   async onModuleInit() {
-    // this.browser = await puppeteer.launch({
-    //   headless: true,
-    //   args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    // });
-
     this.browser = await puppeteer.launch({
       args: (process.env.PUPPETEER_ARGS || '').split(' ').filter(Boolean),
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
       headless: true,
     });
   }
