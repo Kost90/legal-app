@@ -4,6 +4,9 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 
 dotenvConfig({ path: '.env' });
 
+const useSSL = (process.env.DB_SSL || '').toLowerCase() === 'true';
+const ssl = useSSL ? { rejectUnauthorized: false } : false;
+
 const config = {
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
@@ -11,13 +14,11 @@ const config = {
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'mydb',
-  entities: ['dist/**/*.entity{.ts,.js}'],
-  migrations: ['dist/migrations/*{.ts,.js}'],
+  entities: ['dist/**/*.entity{.js,.ts}'],
+  migrations: ['dist/migrations/*{.js,.ts}'],
   autoLoadEntities: true,
-  // TODO: only for dev, for prod change synchronize to false
   synchronize: false,
-  // ssl: false,
-  ssl: { rejectUnauthorized: false },
+  ssl,
 };
 
 export default registerAs('typeorm', () => config);
