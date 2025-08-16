@@ -1,31 +1,28 @@
-# ---------- 1) deps: ставим ВСЕ зависимости для кэша ----------
+# ---------- 1) deps: ставим все зависимости для кэша ----------
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
+
 # Puppeteer не скачивает Chromium на этом этапе
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
 COPY package*.json ./
 RUN npm install
 
-# ---------- 2) builder: собираем Nest в /dist ----------
+# ---------- 2) builder: собираем NestJS в /dist ----------
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 ENV NODE_ENV=development
+
+# Копируем node_modules из deps
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
 RUN npm run build
 
-# ---------- 3) runner: Финальный образ ----------
-FROM ghcr.io/puppeteer/puppeteer:latest
-
-# Устанавливаем рабочую директорию
+# ---------- 3) runner: финальный образ с Puppeteer ----------
+FROM ghcr.io/puppeteer/puppeteer:latest AS runner
 WORKDIR /app
-
-# Копируем файлы зависимостей
-COPY package*.json ./
-
-# Устанавливаем зависимости от root (важно для прав записи)
 USER root
-RUN chown -R pptruser:pptruser /app && npm install
 
 ENV NODE_ENV=production
 
